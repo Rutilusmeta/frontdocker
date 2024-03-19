@@ -25,6 +25,8 @@ yarn-error.log*
 node_modules
 .env
 
+docker-react.log
+
 # Hardhat files
 /cache
 /artifacts
