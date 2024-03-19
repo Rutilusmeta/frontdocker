@@ -7,14 +7,54 @@ import image from '../assets/images/client/05.jpg';
 import { Link } from "react-router-dom";
 import {LuSearch, PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSolid} from "../assets/icons/vander"
 
+import { Web3 } from "web3";
+
+import { useEthereum, useConnect, useAuthCore } from '@particle-network/auth-core-modal';
+import { EthereumGoerli } from '@particle-network/chains';
 
 export default function Navbar() {
     const [isDropdown, openDropdown] = useState(true);
     const [isOpen, setMenu] = useState(true);
 
+    const { provider } = useEthereum(); // For provider retrieval
+    window.web3 = new Web3(provider);
+    const { connect, disconnect } = useConnect(); // For facilitating social logins
+    const { userInfo } = useAuthCore(); // For retrieving user information
+
+
     useEffect(() => {
         activateMenu();
     });
+
+    /*if (userInfo) {
+        console.log(userInfo);
+        console.log("AJA");
+    }*/
+
+    const handleLogin = async () => {
+        try {
+            if (!userInfo) {
+                await connect({
+                    //chain: EthereumGoerli,
+                });
+            }
+        } catch (error) {
+            if (error.code === 4011) {
+                // Handle the case where the user cancels the operation
+                console.log("User canceled the operation");
+                // Add your handling logic here
+            } else {
+                // Handle other types of errors
+                console.error("Error:", error);
+                // Add your error handling logic here
+            }
+        }
+    };
+
+    const handleLogout = async () => {
+        await disconnect();
+        window.location.reload();
+    };
 
     window.addEventListener("scroll", windowScroll);
     function windowScroll() {
@@ -233,7 +273,7 @@ export default function Navbar() {
                     {/* <!--Login button Start--> */}
                     <ul className="buy-button list-none mb-0">
 
-                        <li className="inline-block mb-0">
+                        {/*<li className="inline-block mb-0">
                             <div className="form-icon relative">
                                 <LuSearch className="text-lg absolute top-1/2 -translate-y-1/2 start-3"/>
                                 <input type="text" className="form-input sm:w-44 w-28 ps-10 py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-3xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 bg-white" name="s" id="searchItem" placeholder="Search..." />
@@ -242,13 +282,18 @@ export default function Navbar() {
 
                         <li className="inline-block ps-1 mb-0">
                             <Link to="#" onClick={metamask} id="connectWallet" className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><PiWalletBold/></Link>
-                        </li>
+                        </li>*/}
 
                         <li className="dropdown inline-block relative ps-1">
-                            <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
-                                <img src={image} className="rounded-full" alt="" />
-                            </button>
-
+                            {!userInfo ? (
+                                <button onClick={() => handleLogin()} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" type="button">
+                                    Login
+                                </button>
+                             ) : (
+                                <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
+                                    <img src={image} className="rounded-full" alt="" />
+                                </button>
+                            )}
                             <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 w-48 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} >
                                 <div className="relative">
                                     <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
@@ -282,7 +327,7 @@ export default function Navbar() {
                                     </li>
                                     <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
                                     <li>
-                                        <Link to="/login" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LiaSignOutAltSolid className="text-[16px] align-middle me-1"/> Logout</Link>
+                                        <Link onClick={() => handleLogout()} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LiaSignOutAltSolid className="text-[16px] align-middle me-1"/> Logout</Link>
                                     </li>
                                 </ul>
                             </div>
