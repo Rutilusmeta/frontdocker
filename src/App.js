@@ -56,7 +56,7 @@ function App() {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Navigate to="/index" replace />} />
+        <Route path="/" element={<Navigate to="/index-seven" replace />} />
 
         <Route path="/index" element={<Index />} />
         <Route path="/index-seven" element={<IndexSeven />} />
