@@ -2,7 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import Web3 from 'web3';
 import NFTMarketplacArtifactJson from '../contracts/abi/contracts/NFTMarketplace.sol/NFTMarketplace.json';
-import { useAccount as useParticleAccount, useConnectModal } from '@particle-network/connectkit';
+//import { useAccount as useParticleAccount, useConnectModal } from '@particle-network/connectkit';
 
 const ABI = NFTMarketplacArtifactJson.abi;
 
@@ -12,8 +12,8 @@ export const useNFTMarketplace = () => useContext(NFTMarketplaceContext);
 
 export const NFTMarketplaceContextProvider = ({ children }) => {
 
-    const account = useParticleAccount();
-    const connectModal = useConnectModal();
+    //const account = useParticleAccount();
+    //const connectModal = useConnectModal();
     let providerAddress;
 
     switch (process.env.REACT_APP_NETWORK) {
@@ -59,14 +59,14 @@ export const NFTMarketplaceContextProvider = ({ children }) => {
             const transaction = await contract.methods.createToken(tokenURI, price, collectionAddress);
             //const fees = await estimateTransactionFees(transaction);
             //console.log("Transaction fees", fees);
-            const estimatedGas = await transaction.estimateGas({ from: account });
-            console.log("EStimated Gas:", estimatedGas);
+            //const estimatedGas = await transaction.estimateGas({ from: account });
+            //console.log("EStimated Gas:", estimatedGas);
             //const gasPrice = await web3.eth.getGasPrice();
             //const transactionFees = web3.utils.toBigInt(estimatedGas) * web3.utils.toBigInt(gasPrice);
             //console.log(transactionFees);
-            const recepit = await transaction.send({ from: account, gas: estimatedGas });
-            console.log("Market item created successfully: ", recepit);
-            return recepit;
+            //const recepit = await transaction.send({ from: account, gas: estimatedGas });
+            //console.log("Market item created successfully: ", recepit);
+            //return recepit;
             
         } catch (error) {
             console.error("Error creating market item:", error);
@@ -75,12 +75,12 @@ export const NFTMarketplaceContextProvider = ({ children }) => {
     };
 
     const handleAccountCheck = () => {
-        if (!account) {
+        /*if (!account) {
             //console.log("No wallet connected");
             connectModal.openConnectModal();
             return false;
         }
-        return account;
+        return account;*/
     };
 
     const getBalance = async (address) => {
@@ -102,15 +102,15 @@ export const NFTMarketplaceContextProvider = ({ children }) => {
         try {
             const web3 = new Web3(providerAddress);
             // Estimate gas for the transaction
-            const estimatedGas = await transaction.estimateGas({ from: account });
-            console.log("Estimated Gas:", estimatedGas);
+           // const estimatedGas = await transaction.estimateGas({ from: account });
+            //onsole.log("Estimated Gas:", estimatedGas);
             // Get current gas price
-            const gasPrice = await web3.eth.getGasPrice();
+            //const gasPrice = await web3.eth.getGasPrice();
             // Calculate transaction fees
-            const transactionFees = web3.utils.toBigInt(estimatedGas) * web3.utils.toBigInt(gasPrice);
-            const fees = web3.utils.fromWei(transactionFees, 'ether')
-            console.log("Transaction Fees:", fees, "ETH");
-            return fees;
+            //const transactionFees = web3.utils.toBigInt(estimatedGas) * web3.utils.toBigInt(gasPrice);
+            //const fees = web3.utils.fromWei(transactionFees, 'ether')
+           // console.log("Transaction Fees:", fees, "ETH");
+            //return fees;
         } catch (error) {
             console.error(error);
             return null;
@@ -122,8 +122,8 @@ export const NFTMarketplaceContextProvider = ({ children }) => {
             const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
             
             // Estimate gas for the transaction
-            const estimatedGas = await contract.methods.createToken().estimateGas({ from: account , data:{a:"bbb"}});
-            console.log("Estimated Gas:", estimatedGas);
+            //const estimatedGas = await contract.methods.createToken().estimateGas({ from: account , data:{a:"bbb"}});
+            //console.log("Estimated Gas:", estimatedGas);
             // Get current gas price
            // const gasPrice = await web3.eth.getGasPrice();
             //console.log("Gas Price:", gasPrice);

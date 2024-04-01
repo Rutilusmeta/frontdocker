@@ -5,9 +5,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
-    "@particle-network/chains": "^1.3.26",
-    "@particle-network/connectkit": "^1.3.7",
-    "@particle-network/connectors": "^1.3.4",
+    "@particle-network/auth-core-modal": "^1.3.9",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
