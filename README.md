@@ -1,6 +1,6 @@
 # NFT Market
 
-Project template:
+Project template:.\
 [https://themeforest.net/item/giglink-react-nextjs-nft-marketplace-template/47154319](https://themeforest.net/item/giglink-react-nextjs-nft-marketplace-template/47154319)
 
 ## Available Commands
