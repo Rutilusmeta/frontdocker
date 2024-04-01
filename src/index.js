@@ -36,14 +36,14 @@ root.render(
           Ethereum,
           ParticleChains["localdev"]
         ],
-        /*wallet: {
+        wallet: {
           visible: false,
-         supportChains: [
+         /*supportChains: [
             Ethereum,
             ParticleChains["localdev"]
           ],
-          customStyle: {},
-        },*/
+          customStyle: {},*/
+        },
         promptSettingConfig: {
           promptPaymentPasswordSettingWhenSign: 1,
           promptMasterPasswordSettingWhenLogin: 1
