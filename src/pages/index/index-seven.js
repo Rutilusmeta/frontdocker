@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/navbar'
 import Select from 'react-select'
 import CollectionTwo from '../../components/collection-two';
+import ItemsGrid from '../../components/items-grid';
 import CreatorTwo from '../../components/creator-two';
 import Footer from '../../components/footer';
 import Feature from '../../components/feature';
@@ -30,6 +31,7 @@ const rateOptions = [
 ]
 
 export default function IndexSeven() {
+
     useEffect(() => {
         document.documentElement.classList.add('dark');
     }, []);
@@ -109,11 +111,10 @@ export default function IndexSeven() {
                         </form>
                     </div>
                 </div>
-
                 <Feature />
                 <CollectionTwo title="Top Collection" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!"/>
+                <ItemsGrid title="Market Listings" description="Testing the market listings" pagination={true} />
                 <AuctionsTwo title="Live Auctions" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!"/>
-
                 <CreatorTwo title="Live Auctions" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!" />
             </section>
             <Footer />

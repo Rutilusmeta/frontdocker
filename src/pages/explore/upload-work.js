@@ -1,35 +1,116 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import image from '../../assets/images/avatar/1.jpg';
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
 import {AiOutlineDashboard, PiBrowsers, AiOutlineSetting, IoMdLogOut} from "../../assets/icons/vander"
+import FormData from "form-data";
+import axios from "axios";
+import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
+import TransactionConfirmationDialog from '../../components/TransactionConfirmationDialog';
 
 export default function UploadWork() {
-    useEffect(() => {
-        document.documentElement.classList.add('dark');
-    }, []);
-    const handleChange = () => {
-        const fileUploader = document.querySelector('#input-file');
-        const getFile = fileUploader.files
-        if (getFile.length !== 0) {
-            const uploadedFile = getFile[0];
-            readFile(uploadedFile);
-        }
-    }
 
-    const readFile = (uploadedFile) => {
-        if (uploadedFile) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const parent = document.querySelector('.preview-box');
-                parent.innerHTML = `<img class="preview-content" src=${reader.result} />`;
-            };
+    const { handleAccountCheck, createMarketItem } = useNFTMarketplace();
+    const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+    //const [transactionFees, setTransactionFees] = useState(null);
 
-            reader.readAsDataURL(uploadedFile);
+    const [title, setTitle] = useState("");
+	const [description, setDescription] = useState("");
+	const [imageURI, setImageURI] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const openTransactionDialog =  () => {
+        const account = handleAccountCheck();
+        if(account) {
+            setIsConfirmationOpen(true);
         }
     };
+
+    const handleConfirmTransaction = async () => {
+        await mintNFT();
+        setIsConfirmationOpen(false);
+    };
+
+    const checkCreateNFTForm = (event) => {
+        event.preventDefault();
+		if (imageURI === "") {
+			alert("Please upload an image");
+			return false;
+		} else if (title === "") {
+			alert("Please add a title");
+			return false;
+		}
+        openTransactionDialog();
+        return true;
+    }
+
+    const mintNFT = async () => {
+        const account = handleAccountCheck();
+        try{
+            const jsonData = {
+                name: title,
+                description: description,
+                image: imageURI,
+            };
+            console.log(jsonData);
+            let res = await axios.post(process.env.REACT_APP_IPFS_JSON_URL, jsonData, {
+                auth: {
+                    username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
+                    password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
+                },
+            });
+            const tokenURI = res.data.fastUrl;
+            createMarketItem(tokenURI, 1000, account);
+        }
+        catch (error) {
+            console.error(error);
+        }
+	};
+
+    useEffect(() => {
+        document.documentElement.classList.add('dark');
+    });
+
+    const handleChange = async () => {
+		const fileUploader = document.querySelector("#input-file");
+		const getFile = fileUploader.files;
+		if (getFile.length !== 0) {
+			const uploadedFile = getFile[0];
+			await readFile(uploadedFile);
+		}
+	};
+
+    const readFile = async (uploadedFile) => {
+        if (uploadedFile) {
+            setLoading(true);
+            try{
+                const formData = new FormData();
+                formData.append("file", uploadedFile);
+                const reader = new FileReader();
+                let res = await axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, formData, {
+                    auth: {
+                        username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
+                        password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
+                    },
+                });
+                setImageURI(res.data.fastUrl);
+                reader.onload = () => {
+                    const parent = document.querySelector('.preview-box');
+                    parent.innerHTML = `<img class="preview-content" src=${reader.result} />`;
+                };
+                reader.readAsDataURL(uploadedFile);
+            }
+            catch (error) {
+                console.error(error);
+            }
+            finally {
+                setLoading(false); // Set loading to false after file upload completes
+            }
+        }
+    };
+
     return (
         <>
             <Navbar />
@@ -104,13 +185,13 @@ export default function UploadWork() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="lg:col-span-9 md:col-span-8">
                             <div className="lg:flex p-6 bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-800">
                                 <div className="lg:w-1/3 md:w-full">
                                     <p className="font-semibold mb-6">Upload your ART here, Please click "Upload Image" Button.</p>
                                     <div className="preview-box flex justify-center rounded-md shadow dark:shadow-gray-800 overflow-hidden bg-gray-50 dark:bg-slate-800 text-slate-400 p-2 text-center small">Supports JPG, PNG and MP4 videos. Max file size : 10MB.</div>
                                     <input type="file" id="input-file" name="input-file" accept="image/*" hidden onChange={handleChange} />
+                                    {loading && <div>Loading...</div>}
                                     <label className="btn-upload btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full w-full mt-6 cursor-pointer" htmlFor="input-file">Upload Image</label>
                                 </div>
 
@@ -119,12 +200,12 @@ export default function UploadWork() {
                                         <div className="grid grid-cols-12 gap-6">
                                             <div className="col-span-12">
                                                 <label className="font-semibold">Art Title <span className="text-red-600">*</span></label>
-                                                <input name="name" id="name" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Title :" />
+                                                <input name="name" id="name" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Title :" value={title} onChange={(e) => setTitle(e.target.value)}/>
                                             </div>
 
                                             <div className="col-span-12">
                                                 <label className="font-semibold"> Description : </label>
-                                                <textarea name="comments" id="comments" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Description :"></textarea>
+                                                <textarea name="comments" id="comments" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Description :" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
                                             </div>
 
                                             <div className="md:col-span-6 col-span-12">
@@ -157,7 +238,7 @@ export default function UploadWork() {
                                             </div>
 
                                             <div className="col-span-12">
-                                                <button type="submit" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full">Create Item</button>
+                                                <button type="submit" onClick={checkCreateNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>Create Item</button>
                                             </div>
                                         </div>
                                     </form>
@@ -167,7 +248,7 @@ export default function UploadWork() {
                     </div>
                 </div>
             </section>
-
+            <TransactionConfirmationDialog isOpen={isConfirmationOpen} onClose={() => setIsConfirmationOpen(false)} onConfirm={handleConfirmTransaction}/>
             <Footer />
             <Switcher />
         </>

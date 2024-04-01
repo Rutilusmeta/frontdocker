@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
@@ -6,55 +6,42 @@ import logo_white from '../assets/images/logo-white.png';
 import image from '../assets/images/client/05.jpg';
 import { Link } from "react-router-dom";
 import {LuSearch, PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSolid} from "../assets/icons/vander"
-
-import { Web3 } from "web3";
-
-import { useEthereum, useConnect, useAuthCore } from '@particle-network/auth-core-modal';
-import { EthereumGoerli } from '@particle-network/chains';
+import '@particle-network/connectkit/dist/index.css';
+import { ConnectButton, useAccount, useConnectModal, useConnectId, useParticleConnect } from '@particle-network/connectkit'
+import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
 
 export default function Navbar() {
-    const [isDropdown, openDropdown] = useState(true);
+    const [isDropdown, openDropdown ] = useState(true);
     const [isOpen, setMenu] = useState(true);
-
-    const { provider } = useEthereum(); // For provider retrieval
-    window.web3 = new Web3(provider);
-    const { connect, disconnect } = useConnect(); // For facilitating social logins
-    const { userInfo } = useAuthCore(); // For retrieving user information
-
-
-    useEffect(() => {
-        activateMenu();
-    });
-
-    /*if (userInfo) {
-        console.log(userInfo);
-        console.log("AJA");
-    }*/
-
-    const handleLogin = async () => {
+    const account = useAccount();
+    //const provider = useParticleProvider();
+    const { disconnect, connectKit } = useParticleConnect();
+    const connectModal = useConnectModal();
+    const connectID = useConnectId();
+    const { getBalance } = useNFTMarketplace();
+    const [balance, setBalance ] = useState(null);
+    const initialized = useRef(false);
+    
+    const handleLogout = async () => {
+        await disconnect();
+    };
+    const fetchBalance = async (account) => {
         try {
-            if (!userInfo) {
-                await connect({
-                    //chain: EthereumGoerli,
-                });
-            }
+            console.log("User address:", account);
+            const balance = await getBalance(account);
+            setBalance(balance); // Update the balance state
         } catch (error) {
-            if (error.code === 4011) {
-                // Handle the case where the user cancels the operation
-                console.log("User canceled the operation");
-                // Add your handling logic here
-            } else {
-                // Handle other types of errors
-                console.error("Error:", error);
-                // Add your error handling logic here
-            }
+            console.error("Error fetching balance:", error);
         }
     };
 
-    const handleLogout = async () => {
-        await disconnect();
-        window.location.reload();
-    };
+    useEffect(() => {
+        activateMenu();
+        if (account && !initialized.current) {
+            initialized.current = true;
+            fetchBalance(account); 
+        }
+    }, [getBalance]);
 
     window.addEventListener("scroll", windowScroll);
     function windowScroll() {
@@ -238,7 +225,6 @@ export default function Navbar() {
                             .join('')
                 }
             }
-
             onboardButton.addEventListener('click', onClickConnect)
             closeModalBtn.addEventListener('click', closeModal)
         } catch (error) { }
@@ -271,87 +257,71 @@ export default function Navbar() {
                     </div>
 
                     {/* <!--Login button Start--> */}
-                    <ul className="buy-button list-none mb-0">
+                    <ConnectButton.Custom>
+                        {({ account, openConnectModal }) => {
+                            if (!account) {
+                                return (
+                                    <ul className="buy-button list-none mb-0">
+                                        <li className="inline-block ps-1 mb-0">
+                                            <button onClick={connectModal.openConnectModal} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" type="button">
+                                                login
+                                            </button>
+                                        </li>
+                                    </ul>
+                                );
+                            } else {
+                                return (
+                                    <ul className="buy-button list-none mb-0">
+                                        <li className="dropdown inline-block relative ps-1">
+                                            <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
+                                                <img src={image} className="rounded-full" alt="" />
+                                            </button>
+                                            <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 w-60 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} >
+                                                <div className="relative">
+                                                    <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
+                                                    <div className="absolute px-4 -bottom-7 start-0">
+                                                        <div className="flex items-end">
+                                                            <img src={image} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
 
-                        {/*<li className="inline-block mb-0">
-                            <div className="form-icon relative">
-                                <LuSearch className="text-lg absolute top-1/2 -translate-y-1/2 start-3"/>
-                                <input type="text" className="form-input sm:w-44 w-28 ps-10 py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-3xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 bg-white" name="s" id="searchItem" placeholder="Search..." />
-                            </div>
-                        </li>
-
-                        <li className="inline-block ps-1 mb-0">
-                            <Link to="#" onClick={metamask} id="connectWallet" className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><PiWalletBold/></Link>
-                        </li>*/}
-
-                        <li className="dropdown inline-block relative ps-1">
-                            {!userInfo ? (
-                                <button onClick={() => handleLogin()} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" type="button">
-                                    Login
-                                </button>
-                             ) : (
-                                <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
-                                    <img src={image} className="rounded-full" alt="" />
-                                </button>
-                            )}
-                            <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 w-48 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} >
-                                <div className="relative">
-                                    <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
-                                    <div className="absolute px-4 -bottom-7 start-0">
-                                        <div className="flex items-end">
-                                            <img src={image} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
-
-                                            <span className="font-semibold text-[15px] ms-1">Jenny Jimenez</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-10 px-4">
-                                    <h5 className="font-semibold text-[15px]">Wallet:</h5>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[13px] text-slate-400">qhut0...hfteh45</span>
-                                        <Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 px-4">
-                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">0.00045ETH</span></h5>
-                                </div>
-
-                                <ul className="py-2 text-start">
-                                    <li>
-                                        <Link to="/creator-profile" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/creator-profile-edit" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LuSettings className="text-[16px] align-middle me-1"/> Settings</Link>
-                                    </li>
-                                    <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
-                                    <li>
-                                        <Link onClick={() => handleLogout()} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LiaSignOutAltSolid className="text-[16px] align-middle me-1"/> Logout</Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
+                                                            <span className="font-semibold text-[15px] ms-1">Jenny Jimenez</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-10 px-4">
+                                                    <h5 className="font-semibold text-[15px]">Wallet:</h5>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[13px] text-slate-400">{account}</span>
+                                                        {/*<Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>*/}
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4 px-4">
+                                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">{balance} ETH</span></h5>
+                                                </div>
+                                                <ul className="py-2 text-start">
+                                                    <li>
+                                                        <Link to="/creator-profile" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
+                                                    </li>
+                                                    <li>
+                                                        <Link to="/creator-profile-edit" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LuSettings className="text-[16px] align-middle me-1"/> Settings</Link>
+                                                    </li>
+                                                    <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
+                                                    <li>
+                                                        <Link className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600" onClick={handleLogout}>
+                                                            <LiaSignOutAltSolid className="text-[16px] align-middle me-1"/> Logout
+                                                        </Link>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li> 
+                                    </ul>
+                                )
+                            }
+                        }}
+                    </ConnectButton.Custom>
 
                     <div id="navigation" className={`${isOpen === true ? 'hidden' : 'block'}`}>
                         <ul className="navigation-menu justify-end">
-                            <li className="has-submenu parent-menu-item">
-                                <Link to="#">Home</Link><span className="menu-arrow"></span>
-                                <ul className="submenu">
-                                    <li><Link to="/index" className="sub-menu-item">Home One</Link></li>
-                                    <li><Link to="/index-two" className="sub-menu-item">Home Two</Link></li>
-                                    <li><Link to="/index-three" className="sub-menu-item">Home Three</Link></li>
-                                    <li><Link to="/index-four" className="sub-menu-item">Home Four <span className="bg-gray-50 dark:bg-slate-800 text-[10px] shadow shadow-gray-300 dark:shadow-gray-700 font-bold px-2.5 py-0.5 rounded h-5 ms-1">Light</span></Link></li>
-                                    <li><Link to="/index-five" className="sub-menu-item">Home Five <span className="bg-gray-50 dark:bg-slate-800 text-[10px] shadow shadow-gray-300 dark:shadow-gray-700 font-bold px-2.5 py-0.5 rounded h-5 ms-1">Light</span></Link></li>
-                                    <li><Link to="/index-six" className="sub-menu-item">Home Six <span className="bg-gray-50 dark:bg-slate-800 text-[10px] shadow shadow-gray-300 dark:shadow-gray-700 font-bold px-2.5 py-0.5 rounded h-5 ms-1">Light</span></Link></li>
-                                    <li><Link to="/index-seven" className="sub-menu-item">Home Seven </Link></li>
-                                    <li><Link to="/index-eight" className="sub-menu-item">Home Eight <span className="bg-gray-50 dark:bg-slate-800 text-[10px] shadow shadow-gray-300 dark:shadow-gray-700 font-bold px-2.5 py-0.5 rounded h-5 ms-1">Light</span></Link></li>
-                                    <li><Link to="/index-nine" className="sub-menu-item">Home Nine </Link></li>
-                                    <li><Link to="/index-ten" className="sub-menu-item">Home Ten <span className="bg-gray-50 dark:bg-slate-800 text-[10px] shadow shadow-gray-300 dark:shadow-gray-700 font-bold px-2.5 py-0.5 rounded h-5 ms-1">Light</span></Link></li>
-                                </ul>
-                            </li>
-
+                            <li><Link to="/index-seven" className="sub-menu-item">Home</Link></li>
                             <li className="has-submenu parent-parent-menu-item">
                                 <Link to="#">Explore</Link><span className="menu-arrow"></span>
                                 <ul className="submenu">
@@ -365,9 +335,6 @@ export default function Navbar() {
                                     <li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>
                                 </ul>
                             </li>
-
-                            <li><Link to="/wallet" className="sub-menu-item">Wallet</Link></li>
-
                             <li className="has-submenu parent-parent-menu-item">
                                 <Link to="#">Pages</Link><span className="menu-arrow"></span>
                                 <ul className="submenu">
@@ -420,7 +387,6 @@ export default function Navbar() {
                     </div>
                 </div>
             </nav>
-
         </>
     )
 }

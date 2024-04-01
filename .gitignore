@@ -266,3 +266,20 @@ node_modules
 /coverage
 /coverage.json
 >>>>>>> Stashed changes
+
+node_modules
+.env
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+.openzeppelin/
