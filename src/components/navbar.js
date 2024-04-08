@@ -1,71 +1,76 @@
-import React, { useEffect, useState, useRef } from 'react'
-
+import React, { useEffect, useState, useRef, useContext } from 'react'
 import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
-import image from '../assets/images/client/05.jpg';
+//import image from '../assets/images/client/05.jpg';
 import { Link } from "react-router-dom";
-import {LuSearch, PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSolid} from "../assets/icons/vander"
-
+import { PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSolid } from "../assets/icons/vander"
 import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
-//import { EthereumGoerli } from '@particle-network/chains';
+import UserContext from '../contexts/UserContext';
 
-import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
-
-export default function Navbar() {
-
+export default function Navbar() 
+{
+    const { userData, checkUserData } = useContext(UserContext);
     const [isDropdown, openDropdown] = useState(true);
     const [isOpen, setMenu] = useState(true);
-    const { connect, disconnect } = useConnect(); // For facilitating social logins
-    const { userInfo } = useAuthCore(); // For retrieving user information
-
-    //const account = useAccount();
-    //const provider = useParticleProvider();
-    //const { disconnect, connectKit } = useParticleConnect();
-    //const connectModal = useConnectModal();
-    //const connectID = useConnectId();
-    //const { getBalance } = useNFTMarketplace();
-    //const [balance, setBalance ] = useState(null);
+    const { connect, disconnect } = useConnect();
+    const { userInfo } = useAuthCore();
+    const [imageSrc, setImageSrc] = useState(null);
     const initialized = useRef(false);
-    
-    /*const fetchBalance = async (account) => {
-        try {
-            console.log("User address:", account);
-            const balance = await getBalance(account);
-            setBalance(balance); // Update the balance state
-        } catch (error) {
-            console.error("Error fetching balance:", error);
-        }
-    };*/
 
-    useEffect(() => {
+    useEffect(() => 
+    {
         activateMenu();
-       if (userInfo && !initialized.current) {
+        //console.log("NAVABR", userData, userInfo);
+        if (userInfo && !initialized.current) 
+        {
+            console.log("CHEKING NAVBAR", userData, userInfo);
             initialized.current = true;
-            //fetchBalance(account); 
-            console.log(userInfo);
-        }
-    }/*, [getBalance]*/);
-
-    const handleLogin = async () => {
-        try {
-            if (!userInfo) {
-                await connect({
-                    //chain: EthereumGoerli,
-                });
+            const result = checkUserData(userInfo);
+            if (userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
+            {
+                setImageSrc(userData.avatar); 
             }
-        } catch (error) {
-            if (error.code === 4011) {
-                // Handle the case where the user cancels the operation
+            else if (userData.avatar)
+            {
+                setImageSrc(`/avatar/${userData.avatar}`); 
+            }
+            else
+            {
+                setImageSrc(`/avatar/1.jpg`); 
+            }
+            if (!result)
+            {
+                alert("Some error occured trying to login, please contact support!");
+                disconnect();
+            }
+        }
+    });
+
+    const handleLogin = async () => 
+    {
+        try 
+        {
+            if (!userInfo) 
+            {
+                await connect({});
+            }
+        } 
+        catch (error) 
+        {
+            if (error.code === 4011) 
+            {
                 console.log("User canceled the operation");
-            } else {
-                // Handle other types of errors
+            } 
+            else 
+            {
                 console.error("Error:", error);
             }
         }
     };
 
-    const handleLogout = async () => {
+    const handleLogout = async () => 
+    {
         await disconnect();
         window.location.reload();
     };
@@ -304,7 +309,7 @@ export default function Navbar() {
                                 </button>
                             ) : (
                                 <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
-                                    <img src={image} className="rounded-full" alt="" />
+                                    <img src={imageSrc} className="rounded-full" alt="" />
                                 </button>
                             )}
                             <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 w-48 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} >
@@ -312,9 +317,8 @@ export default function Navbar() {
                                     <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
                                     <div className="absolute px-4 -bottom-7 start-0">
                                         <div className="flex items-end">
-                                            <img src={image} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
-
-                                            <span className="font-semibold text-[15px] ms-1">Jenny Jimenez</span>
+                                            <img src={imageSrc} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
+                                            <span className="font-semibold text-[15px] ms-1">{userData.firstname}</span>
                                         </div>
                                     </div>
                                 </div>

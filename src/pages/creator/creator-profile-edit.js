@@ -1,21 +1,164 @@
-import React from 'react'
-import image from '../../assets/images/avatar/1.jpg';
+import React, { useContext, useState, useEffect } from 'react'
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Linkedin, Youtube, Twitter } from 'react-feather';
+import UserContext from '../../contexts/UserContext';
+import { useAuthCore } from '@particle-network/auth-core-modal';
+import axios from 'axios';
 
 export default function CreatorProfileEdit() {
+
+    const { userInfo } = useAuthCore();
+    const { userData, saveUserData } = useContext(UserContext);
+    const [formData, setFormData] = useState({
+        firstname: '',
+        lastname: '',
+        email: '',
+        phone: '',
+        description: '',
+    });
+    const [phoneError, setPhoneError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(false);
+    const [avatar, setAvatar] = useState(false);
+    const [imageSrc, setImageSrc] = useState(null);
+
+    useEffect(() => 
+    {
+        if (userData) 
+        {
+            setFormData({
+                firstname: userData.firstname || '',
+                lastname: userData.lastname || '',
+                email: userData.email || '',
+                phone: userData.phone || '',
+                description: userData.description || '',
+                avatar: userData.avatar || ''
+            });
+            if (userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
+            {
+                setImageSrc(userData.avatar); 
+            }
+            else if (userData.avatar)
+            {
+                setImageSrc(`/avatar/${userData.avatar}`); 
+            }
+        }
+        else
+        {
+            setImageSrc(`/avatar/1.jpg`); 
+        }
+    }, [userData]);
+
+    if (!userData) {
+        // Handle the case where userData is not available yet
+        return <div>Loading...</div>; // or some other loading indicator
+    }
+
+    const handleInputChange = (e) => 
+    {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const validatePhone = () => {
+        const isValid = /^\+\d{1,3}\d{9}$/.test(formData.phone);
+        setPhoneError(isValid ? '' : 'Please enter a valid phone number');
+        return isValid;
+    };
+
+    const handleSaveUserData = async (userInfo, formData, avatar) => 
+    {
+        try {
+            const saved = await saveUserData(userInfo, formData);
+            if (saved) {
+                setSuccessMessage('Profile updated successfully!');
+                setAvatar(false);
+            } else {
+                setErrorMessage('Failed to update profile. Please try again.');
+            }
+            console.log('Form submitted successfully:', formData, saved);
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            setErrorMessage('Failed to update profile. Please try again.');
+        }
+    };
+
+    const handleSubmit = async (e) => 
+    {
+        setSuccessMessage('');
+        setErrorMessage('');
+        e.preventDefault();
+        if (formData.phone !== '' && !validatePhone()) 
+        {
+            alert('Please enter a valid phone number. The format should be:' +
+                ' +[country code][area code][subscriber number], for example: +15551234567');
+            return;
+        }
+        try 
+        {
+            setIsLoading(true);
+            console.log("handleSubmit", formData, avatar);
+            if (avatar)
+            {
+                fetch(avatar)
+                .then(response => response.blob())
+                .then(blob => {
+                    const avatarForm = new FormData();
+                    avatarForm.append('file', blob);
+                    return axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, avatarForm, {
+                    auth: {
+                        username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
+                        password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
+                    },
+                    });
+                })
+                .then(response => {
+                    console.log('Image uploaded successfully:', response.data);
+                    const newAvatarUrl = response.data.fastUrl || '';
+                    /*setFormData(prevFormData => ({
+                        ...prevFormData,
+                        avatar: newAvatarUrl
+                    }));*/ // it is not working
+                    formData.avatar = newAvatarUrl;
+                    handleSaveUserData(userInfo, formData, avatar);
+                    setIsLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error uploading image:', error);
+                    setIsLoading(false);
+                });
+            }
+            else
+            {
+                await handleSaveUserData(userInfo, formData, avatar);
+                setIsLoading(false);
+            }
+        } 
+        catch (error) 
+        {
+            console.error('Error submitting form:', error);
+            setIsLoading(false);
+        }
+    };
     const loadFile = (event) => {
-        const image = document.getElementById(event.target.name);
-        image.src = URL.createObjectURL(event.target.files[0]);
+        const selectedFile = event.target.files[0];
+        if (selectedFile.type.startsWith('image/')) {
+            const image = document.getElementById(event.target.name);
+            image.src = URL.createObjectURL(selectedFile);
+            setAvatar(image.src);
+        } else {
+            console.error('Invalid file type. Please select an image file.');
+            alert('Invalid file type. Please select an image file');
+        }
     };
 
     return (
         <>
             <Navbar />
-            <section className="relative table w-full py-36 bg-[url('../../assets/images/bg/bg1.jpg')] bg-bottom bg-no-repeat">
+           {/* <section className="relative table w-full py-36 bg-[url('../../assets/images/bg/bg1.jpg')] bg-bottom bg-no-repeat">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900"></div>
                 <div className="container">
                     <div className="grid grid-cols-1 pb-8 text-center mt-10">
@@ -30,7 +173,7 @@ export default function CreatorProfileEdit() {
                         <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white" aria-current="page">Settings</li>
                     </ul>
                 </div>
-            </section>
+            </section>*/}
             <div className="relative">
                 <div className="shape absolute start-0 end-0 sm:-bottom-px -bottom-[2px] overflow-hidden z-1 text-white dark:text-slate-900">
                     <svg className="w-full h-auto" viewBox="0 0 2880 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,10 +187,10 @@ export default function CreatorProfileEdit() {
                     <div className="grid md:grid-cols-12 gap-[30px]">
                         <div className="lg:col-span-3 md:col-span-4">
                             <div className="group profile-pic w-[112px]">
-                                <input id="pro-img" name="profile-image" type="file" className="hidden" onChange={loadFile} />
+                                <input id="pro-img" name="profile-image" type="file" className="hidden" accept="image/*" onChange={loadFile} />
                                 <div>
                                     <div className="relative h-28 w-28 rounded-full shadow-md dark:shadow-gray-800 ring-4 ring-slate-50 dark:ring-slate-800 overflow-hidden">
-                                        <img src={image} className="rounded-full" id="profile-image" alt="" />
+                                        <img src={imageSrc} className="rounded-full" id="profile-image" alt="" />
                                         <div className="absolute inset-0 group-hover:bg-slate-900/40 transition duration-500"></div>
                                         <label className="absolute inset-0 cursor-pointer" htmlFor="pro-img"></label>
                                     </div>
@@ -60,38 +203,51 @@ export default function CreatorProfileEdit() {
                         <div className="lg:col-span-9 md:col-span-8">
                             <div className="p-6 rounded-md shadow dark:shadow-gray-800 bg-white dark:bg-slate-900">
                                 <h5 className="text-lg font-semibold mb-4">Personal Detail :</h5>
-                                <form>
+                                <form onSubmit={handleSubmit}>
                                     <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">
                                         <div>
                                             <label className="form-label font-medium">First Name : <span className="text-red-600">*</span></label>
-                                            <input type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="First Name:" id="firstname" name="name" />
+                                            <input
+                                                type="text"
+                                                className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2"
+                                                placeholder="First Name:"
+                                                id="firstname"
+                                                name="firstname"
+                                                onChange={handleInputChange}
+                                                defaultValue={userData.firstname || ''}
+                                            />
                                         </div>
                                         <div>
                                             <label className="form-label font-medium">Last Name : <span className="text-red-600">*</span></label>
-                                            <input type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Last Name:" id="lastname" name="name" />
+                                            <input type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Last Name:" id="lastname" name="lastname" defaultValue={userData.lastname || ''} onChange={handleInputChange}/>
                                         </div>
                                         <div>
                                             <label className="form-label font-medium">Your Email : <span className="text-red-600">*</span></label>
-                                            <input type="email" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Email" name="email" />
+                                            <input type="email" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Email" name="email" defaultValue={userData.email || ''} disabled />
                                         </div>
                                         <div>
-                                            <label className="form-label font-medium">Occupation : </label>
-                                            <input name="name" id="occupation" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Occupation :" />
+                                            <label className="form-label font-medium">Phone : </label>
+                                            <input name="phone" id="phone" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Phone :" defaultValue={userData.phone || ''} onChange={handleInputChange}/>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1">
                                         <div className="mt-5">
                                             <label className="form-label font-medium">Description : </label>
-                                            <textarea name="comments" id="comments" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Message :"></textarea>
+                                            <textarea name="description" id="description" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Message :" defaultValue={userData.description || ''} onChange={handleInputChange}></textarea>
                                         </div>
                                     </div>
 
-                                    <input type="submit" id="submit" name="send" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full mt-5" value="Save Changes" />
+                                     {/* Success message */}
+                                    {successMessage && <div className="text-green-600">{successMessage}</div>}
+                                    {/* Error message */}
+                                    {errorMessage && <div className="text-red-600">{errorMessage}</div>}
+
+                                    <input type="submit" id="submit" name="send" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full mt-5" value={isLoading ? "Submitting..." : "Save Changes"} disabled={isLoading} />
                                 </form>
                             </div>
 
-                            <div className="p-6 rounded-md shadow dark:shadow-gray-800 bg-white dark:bg-slate-900 mt-[30px]">
+                            {/*<div className="p-6 rounded-md shadow dark:shadow-gray-800 bg-white dark:bg-slate-900 mt-[30px]">
                                 <h5 className="text-lg font-semibold mb-6">Social Profiles :</h5>
 
                                 <div className="md:flex">
@@ -307,7 +463,7 @@ export default function CreatorProfileEdit() {
                                 <p className="text-slate-400 mb-4">Do you want to delete the account? Please press below "Delete" button</p>
 
                                 <Link to="/explore-two" className="btn bg-red-600 hover:bg-red-700 border-red-600 hover:border-red-700 text-white rounded-full">Delete</Link>
-                            </div>
+                            </div>*/}
                         </div>
                     </div>
                 </div>

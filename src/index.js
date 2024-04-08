@@ -37,7 +37,7 @@ root.render(
       }}
     >
     <App />
-      </AuthCoreContextProvider>
+    </AuthCoreContextProvider>
   </React.StrictMode>
 );
 

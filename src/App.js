@@ -44,74 +44,84 @@ import HelpcenterOverview from './pages/helpcenter/helpcenter-overview';
 import ScrollToTop from './components/scroll-top';
 import ExploreTwo from './pages/explore/explore-two';
 import ExploreThree from './pages/explore/explore-three';
-
+import NotFound from './pages/special/error';
+import { UserProvider } from './contexts/UserContext';
 import { NFTMarketplaceContextProvider } from './contexts/NFTMarketplaceContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
-function App() {
-  useEffect(() => {
+function App() 
+{
+  
+  useEffect(() => 
+  {
     document.documentElement.setAttribute("dir", "ltr");
     document.documentElement.classList.add('dark');
     document.body.classList.add('font-urbanist', 'text-base', 'text-black', 'dark:text-white', 'dark:bg-slate-900');
-
   });
+
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <NFTMarketplaceContextProvider>
-        <Routes>
-          <Route path="/" element={<Navigate to="/index-seven" replace />} />
+      <UserProvider>
+        <NFTMarketplaceContextProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/index-seven" replace />} />
 
-          <Route path="/index" element={<Index />} />
-          <Route path="/index-seven" element={<IndexSeven />} />
-          <Route path="/index-two" element={<IndexTwo />} />
-          <Route path="/index-three" element={<IndexThree />} />
-          <Route path="/index-ten" element={<IndexTen />} />
-          <Route path="/index-nine" element={<IndexNine />} />
-          <Route path="/index-eight" element={<IndexEight />} />
-          <Route path='/explore-one' element={<ExploreOne />} />
-          <Route path='/auction' element={<Auction />} />
-          <Route path='/activity' element={<Activity />} />
-          <Route path='/collections' element={<Collections />} />
-          <Route path='/wallet' element={<Wallet />} />
-          <Route path="/explore-two" element={<ExploreTwo />} />
-          <Route path="/explore-three" element={<ExploreThree />} />
-          <Route path="/index-four" element={<IndexFour />} />
-          <Route path='/upload-work' element={<UploadWork />} />
-          <Route path="/index-six" element={<IndexSix />} />
-          <Route path="/index-five" element={<IndexFive />} />
+            <Route path="/index" element={<Index />} />
+            <Route path="/index-seven" element={<IndexSeven />} />
+            <Route path="/index-two" element={<IndexTwo />} />
+            <Route path="/index-three" element={<IndexThree />} />
+            <Route path="/index-ten" element={<IndexTen />} />
+            <Route path="/index-nine" element={<IndexNine />} />
+            <Route path="/index-eight" element={<IndexEight />} />
+            <Route path='/explore-one' element={<ExploreOne />} />
+            <Route path='/auction' element={<Auction />} />
+            <Route path='/activity' element={<Activity />} />
+            <Route path='/collections' element={<Collections />} />
+            <Route path='/wallet' element={<Wallet />} />
+            <Route path="/explore-two" element={<ExploreTwo />} />
+            <Route path="/explore-three" element={<ExploreThree />} />
+            <Route path="/index-four" element={<IndexFour />} />
+            <Route path='/upload-work' element={<UploadWork />} />
+            <Route path="/index-six" element={<IndexSix />} />
+            <Route path="/index-five" element={<IndexFive />} />
 
-          <Route path='/item-detail' element={<ItemDetail />} />
-          <Route path='/item-detail/:id' element={<ItemDetail />} />
-          <Route path='/helpcenter-guides' element={<Guides />} />
-          <Route path='/helpcenter-support' element={<Support />} />
-          <Route path='/helpcenter-support' element={<Support />} />
-          <Route path='/helpcenter-faqs' element={<HelpcenterFaqs />} />
-          <Route path='/privacy' element={<PrivacyPolicy />} />
-          <Route path='/terms' element={<Terms />} />
-          <Route path='/comingsoon' element={<Comingsoon />} />
-          <Route path='/maintenance' element={<Maintenance />} />
-          <Route path='/error' element={<Error />} />
-          <Route path='/thankyou' element={<Thankyou />} />
+            <Route path='/item-detail' element={<ItemDetail />} />
+            <Route path='/item-detail/:id' element={<ItemDetail />} />
+            <Route path='/helpcenter-guides' element={<Guides />} />
+            <Route path='/helpcenter-support' element={<Support />} />
+            <Route path='/helpcenter-support' element={<Support />} />
+            <Route path='/helpcenter-faqs' element={<HelpcenterFaqs />} />
+            <Route path='/privacy' element={<PrivacyPolicy />} />
+            <Route path='/terms' element={<Terms />} />
+            <Route path='/comingsoon' element={<Comingsoon />} />
+            <Route path='/maintenance' element={<Maintenance />} />
+            <Route path='/error' element={<Error />} />
+            <Route path='/thankyou' element={<Thankyou />} />
 
-          <Route path='/login' element={<Login />} />
-          <Route path='/signup' element={<Signup />} />
-          <Route path='/reset-password' element={<ResetPassword />} />
-          <Route path='/lock-screen' element={<LockScreen />} />
-          <Route path='/helpcenter-overview' element={<HelpcenterOverview />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/signup' element={<Signup />} />
+            <Route path='/reset-password' element={<ResetPassword />} />
+            <Route path='/lock-screen' element={<LockScreen />} />
+            <Route path='/helpcenter-overview' element={<HelpcenterOverview />} />
 
-          <Route path='/blogs' element={<Blogs />} />
-          <Route path='/blog-detail' element={<BlogDetail />} />
-          <Route path='/blog-detail/:id' element={<BlogDetail />} />
+            <Route path='/blogs' element={<Blogs />} />
+            <Route path='/blog-detail' element={<BlogDetail />} />
+            <Route path='/blog-detail/:id' element={<BlogDetail />} />
 
-          <Route path='/become-creator' element={<BecomeCreator />} />
-          <Route path='/creator-profile' element={<CreatorProfile />} />
-          <Route path='/creator-profile/:id' element={<CreatorProfile />} />
-          <Route path='/creator-profile-edit' element={<CreatorProfileEdit />} />
-          <Route path='/creators' element={<Creators />} />
-          <Route path="/aboutus" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
-      </NFTMarketplaceContextProvider>
+            <Route path='/become-creator' element={<BecomeCreator />} />
+            <Route path='/creator-profile' element={<CreatorProfile />} />
+            <Route path='/creator-profile/:id' element={<CreatorProfile />} />
+            <Route exact path='/creator-profile-edit' element={<ProtectedRoute/>}>
+              <Route exact path='/creator-profile-edit' element={<CreatorProfileEdit/>}/>
+            </Route>
+            <Route path='/creators' element={<Creators />} />
+            <Route path="/aboutus" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </NFTMarketplaceContextProvider>
+      </UserProvider>
     </BrowserRouter>
   );
 }
