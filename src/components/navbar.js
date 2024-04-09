@@ -8,6 +8,8 @@ import { PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSo
 import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
 import UserContext from '../contexts/UserContext';
 
+import EnvDiv from './env-div';
+
 import Web3 from 'web3';
 
 export default function Navbar() 
@@ -325,6 +327,9 @@ export default function Navbar()
     return (
         <>
             <nav id="topnav" className="defaultscroll is-sticky">
+
+                <EnvDiv />
+                
                 <div className="container">
                     {/* <!-- Logo container--> */}
                     <Link className="logo ps-0" to="/">
