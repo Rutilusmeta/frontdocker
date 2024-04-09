@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from 'react'
+import React, { useEffect, useState, useRef, useContext, useCallback } from 'react'
 import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
@@ -8,6 +8,8 @@ import { PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSo
 import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
 import UserContext from '../contexts/UserContext';
 
+import Web3 from 'web3';
+
 export default function Navbar() 
 {
     const { userData, checkUserData } = useContext(UserContext);
@@ -16,22 +18,128 @@ export default function Navbar()
     const { connect, disconnect } = useConnect();
     const { userInfo } = useAuthCore();
     const [imageSrc, setImageSrc] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [walletAddress, setWalletAddress] = useState('');
+    const [addressBalance, setAddressBalance] = useState('');
     const initialized = useRef(false);
 
+    const isMetaMaskInstalled = () => {
+        return Boolean(window.ethereum && window.ethereum.isMetaMask);
+    };
+
+    const onClickConnect = async () => {
+        if (!isMetaMaskInstalled()) {
+            setIsModalOpen(true);
+            return;
+        }
+        try {
+            // Request access to the user's MetaMask accounts
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+    
+            // Get the user's accounts from MetaMask
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            console.log("Accounts", accounts);
+    
+            // Set the wallet address
+            const userAddress = accounts[0];
+            setWalletAddress(userAddress.slice(0, 6) + '...' + userAddress.slice(-7));
+    
+            // Initialize Web3 with the current provider
+            const web3 = new Web3(window.ethereum);
+    
+            // Fetch the balance using Web3
+            const balance = await web3.eth.getBalance(userAddress);
+            console.log("Balance", balance);
+    
+            // Convert balance from wei to ether (1 ether = 10^18 wei)
+            const balanceInEther = web3.utils.fromWei(balance, 'ether');
+            console.log("Balance in Ether", balanceInEther);
+            const roundedBalance = Number.parseFloat(balanceInEther).toFixed(4);
+            console.log("Balance in Ether (rounded)", roundedBalance);
+            setAddressBalance(roundedBalance);
+        } catch (error) {
+            console.error('Error fetching address balance from MetaMask:', error);
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+    };
+
+    /*const connectWallet = async () => {
+        if (isMetaMaskInstalled()) {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (!!accounts[0]) {
+                setWalletAddress(
+                    accounts[0].slice(0, 6) + '...' + accounts[0].slice(-7)
+                );
+            }
+        }
+    };*/
+
+
+    const activateMenu = useCallback(() => {
+        var menuItems = document.getElementsByClassName("sub-menu-item");
+        if (menuItems) {
+    
+            var matchingMenuItem = null;
+            for (var idx = 0; idx < menuItems.length; idx++) {
+                if (menuItems[idx].href === window.location.href) {
+                    matchingMenuItem = menuItems[idx];
+                }
+            }
+    
+            if (matchingMenuItem) {
+                matchingMenuItem.classList.add('active');
+    
+                var immediateParent = getClosest(matchingMenuItem, 'li');
+    
+                if (immediateParent) {
+                    immediateParent.classList.add('active');
+                }
+    
+                var childParent = getClosest(immediateParent, '.child-menu-item'); // Rename 'parent' to 'childParent'
+                if (childParent) {
+                    childParent.classList.add('active');
+                }
+    
+                var parentItem = getClosest(childParent || immediateParent, '.parent-menu-item'); // Rename 'parent' to 'parentItem'
+                if (parentItem) {
+                    parentItem.classList.add('active');
+    
+                    var parentMenuItem = parentItem.querySelector('.menu-item');
+                    if (parentMenuItem) {
+                        parentMenuItem.classList.add('active');
+                    }
+    
+                    var parentOfParent = getClosest(parentItem, '.parent-parent-menu-item');
+                    if (parentOfParent) {
+                        parentOfParent.classList.add('active');
+                    }
+                } else {
+                    var parentOfParentItem = getClosest(matchingMenuItem, '.parent-parent-menu-item'); // Rename 'parentOfParent' to 'parentOfParentItem'
+                    if (parentOfParentItem) {
+                        parentOfParentItem.classList.add('active');
+                    }
+                }
+            }
+        }
+    }, []);   
+    
     useEffect(() => 
     {
         activateMenu();
         //console.log("NAVABR", userData, userInfo);
         if (userInfo && !initialized.current) 
         {
-            console.log("CHEKING NAVBAR", userData, userInfo);
+            //console.log("CHEKING NAVBAR", userData, userInfo);
             initialized.current = true;
             const result = checkUserData(userInfo);
-            if (userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
+            if (userData && userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
             {
                 setImageSrc(userData.avatar); 
             }
-            else if (userData.avatar)
+            else if (userData && userData.avatar)
             {
                 setImageSrc(`/avatar/${userData.avatar}`); 
             }
@@ -45,7 +153,7 @@ export default function Navbar()
                 disconnect();
             }
         }
-    });
+    }, [activateMenu, userInfo, checkUserData, userData, disconnect]);
 
     const handleLogin = async () => 
     {
@@ -146,58 +254,10 @@ export default function Navbar()
         return null;
 
     };
-    const activateMenu = () => {
-        var menuItems = document.getElementsByClassName("sub-menu-item");
-        if (menuItems) {
 
-            var matchingMenuItem = null;
-            for (var idx = 0; idx < menuItems.length; idx++) {
-                if (menuItems[idx].href === window.location.href) {
-                    matchingMenuItem = menuItems[idx];
-                }
-            }
-
-            if (matchingMenuItem) {
-                matchingMenuItem.classList.add('active');
-
-
-                var immediateParent = getClosest(matchingMenuItem, 'li');
-
-                if (immediateParent) {
-                    immediateParent.classList.add('active');
-                }
-
-                var parent = getClosest(immediateParent, '.child-menu-item');
-                if (parent) {
-                    parent.classList.add('active');
-                }
-
-                var parent = getClosest(parent || immediateParent, '.parent-menu-item');
-
-                if (parent) {
-                    parent.classList.add('active');
-
-                    var parentMenuitem = parent.querySelector('.menu-item');
-                    if (parentMenuitem) {
-                        parentMenuitem.classList.add('active');
-                    }
-
-                    var parentOfParent = getClosest(parent, '.parent-parent-menu-item');
-                    if (parentOfParent) {
-                        parentOfParent.classList.add('active');
-                    }
-                } else {
-                    var parentOfParent = getClosest(matchingMenuItem, '.parent-parent-menu-item');
-                    if (parentOfParent) {
-                        parentOfParent.classList.add('active');
-                    }
-                }
-            }
-        }
-    }
-
-    const metamask = async () => {
+    /*const metamask = async () => {
         try {
+            
             //Basic Actions Section
             const onboardButton = document.getElementById('connectWallet')
 
@@ -260,7 +320,7 @@ export default function Navbar()
             onboardButton.addEventListener('click', onClickConnect)
             closeModalBtn.addEventListener('click', closeModal)
         } catch (error) { }
-    }
+    }*/
 
     return (
         <>
@@ -299,8 +359,23 @@ export default function Navbar()
                         </li>*/}
 
                         <li className="inline-block ps-1 mb-0">
-                            <Link to="#" onClick={metamask} id="connectWallet" className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><PiWalletBold/></Link>
+                            <button
+                                onClick={onClickConnect}
+                                className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"
+                            >
+                                <PiWalletBold />
+                            </button>
                         </li>
+
+                        {isModalOpen && (
+                            <div id="modal-metamask" className="modal show">
+                                <button onClick={closeModal} className="close" id="close-modal">
+                                    Close
+                                </button>
+                                {/* Modal content here */}
+                            </div>
+                        )}
+                        {/*<div id="myPublicAddress">{walletAddress}</div>*/}
 
                         <li className="dropdown inline-block relative ps-1">
                             {!userInfo ? (
@@ -318,7 +393,9 @@ export default function Navbar()
                                     <div className="absolute px-4 -bottom-7 start-0">
                                         <div className="flex items-end">
                                             <img src={imageSrc} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
-                                            <span className="font-semibold text-[15px] ms-1">{userData.firstname}</span>
+                                            {userData && (
+                                             <span className="font-semibold text-[15px] ms-1">{userData.firstname}</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -326,13 +403,13 @@ export default function Navbar()
                                 <div className="mt-10 px-4">
                                     <h5 className="font-semibold text-[15px]">Wallet:</h5>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[13px] text-slate-400">qhut0...hfteh45</span>
+                                        <span className="text-[13px] text-slate-400">{walletAddress}</span>
                                         <Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>
                                     </div>
                                 </div>
 
                                 <div className="mt-4 px-4">
-                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">0.00045ETH</span></h5>
+                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">0.{addressBalance}</span></h5>
                                 </div>
 
                                 <ul className="py-2 text-start">

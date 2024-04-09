@@ -12,6 +12,24 @@ export const UserProvider = ({ children }) =>
     const [loading, setLoading] = useState(true); // Add loading state
     const isMounted = useRef(false);
 
+    let providerAddress;
+
+    switch (process.env.REACT_APP_CURRENT_ENV) {
+        case 'dev':
+            providerAddress = process.env.REACT_APP_API_ADDRESS_DEV;
+            break;
+        case 'testing':
+            providerAddress = process.env.REACT_APP_API_ADDRESS_TESTING;
+            break;
+        case 'prod':
+            providerAddress = process.env.REACT_APP_API_ADDRESS_PROD;
+            break;
+        default:
+            // Default to dev environment if REACT_APP_NETWORK is not set or unrecognized
+            providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
+            break;
+    }
+
     const updateUser = (newUserData) => 
     {
         console.log("Updating userData", newUserData);
@@ -28,22 +46,22 @@ export const UserProvider = ({ children }) =>
 
     const checkUserData = (userInfo) =>
     {
-        console.log("User info from particle userInfo:", userInfo);
-        console.log("User info from particle userData:", userData);
+        //console.log("User info from particle userInfo:", userInfo);
+        //console.log("User info from particle userData:", userData);
         let have_data = false;
         if (userData)
         {
             have_data = true;
             if (userData.token !== userInfo.token)
             {
-                console.log('userData.token has changed:', { old: userData.token, new: userInfo.token });
+                //console.log('userData.token has changed:', { old: userData.token, new: userInfo.token });
                 have_data = false;
             }
         }
         if (have_data === false) 
         {
-            console.log('userData does not exist in localStorage or token has changed');
-            const url = process.env.REACT_APP_API_ADDRESS + '/user/';
+            //console.log('userData does not exist in localStorage or token has changed');
+            const url = providerAddress + '/user/';
             const headers = 
             {
                 'Authorization': userInfo.token,
@@ -52,7 +70,7 @@ export const UserProvider = ({ children }) =>
             axios.get(url, { params: {}, headers })
             .then(response => 
             {
-                console.log('Get userData Response:', response.data);
+                //console.log('Get userData Response:', response.data);
                 let newUserData = response.data.result.data[0]; 
                 newUserData.token = userInfo.token;
                 newUserData.uuid = userInfo.uuid;
@@ -70,7 +88,7 @@ export const UserProvider = ({ children }) =>
     {
         try 
         {
-            const url = process.env.REACT_APP_API_ADDRESS + '/user/';
+            const url = providerAddress + '/user/';
             const headers = 
             {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -78,7 +96,7 @@ export const UserProvider = ({ children }) =>
                 'UUID': userInfo.uuid
             };
             const response = await axios.put(url, new URLSearchParams(formData).toString(), { headers });
-            console.log('User data saved successfully:', response.data);
+            //console.log('User data saved successfully:', response.data);
             let newUserData = response.data.result.data[0]; 
             newUserData.token = userInfo.token;
             newUserData.uuid = userInfo.uuid;

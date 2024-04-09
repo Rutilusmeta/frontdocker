@@ -116,7 +116,7 @@ export default function CreatorProfileEdit() {
                     });
                 })
                 .then(response => {
-                    console.log('Image uploaded successfully:', response.data);
+                   // console.log('Image uploaded successfully:', response.data);
                     const newAvatarUrl = response.data.fastUrl || '';
                     /*setFormData(prevFormData => ({
                         ...prevFormData,

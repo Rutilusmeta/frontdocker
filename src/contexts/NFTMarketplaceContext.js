@@ -16,19 +16,19 @@ export const NFTMarketplaceContextProvider = ({ children }) => {
     //const connectModal = useConnectModal();
     let providerAddress;
 
-    switch (process.env.REACT_APP_NETWORK) {
+    switch (process.env.REACT_APP_CURRENT_ENV) {
         case 'dev':
-            providerAddress = process.env.REACT_APP_CHAIN_DEV_ADDRESS;
+            providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
             break;
         case 'testing':
-            providerAddress = process.env.REACT_APP_CHAIN_TESTING_ADDRESS;
+            providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_TESTING;
             break;
         case 'prod':
-            providerAddress = process.env.REACT_APP_CHAIN_PROD_ADDRESS;
+            providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_PROD;
             break;
         default:
             // Default to dev environment if REACT_APP_NETWORK is not set or unrecognized
-            providerAddress = process.env.REACT_APP_CHAIN_DEV_ADDRESS;
+            providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
             break;
     }
 
