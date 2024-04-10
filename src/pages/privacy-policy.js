@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
 
                 <div className="absolute text-center z-10 bottom-5 start-0 end-0 mx-3">
                     <ul className="breadcrumb tracking-[0.5px] breadcrumb-light mb-0 inline-block">
-                        <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white/50 hover:text-white"><Link to="/">Giglink</Link></li>
+                        <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white/50 hover:text-white"><Link to="/"> MetaQueer MArketplace </Link></li>
                         <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white" aria-current="page">Privacy Policy</li>
                     </ul>
                 </div>
@@ -38,13 +38,20 @@ export default function PrivacyPolicy() {
                     <div className="md:flex justify-center">
                         <div className="md:w-3/4">
                             <div className="p-6 bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 rounded-md">
-                                <h5 className="text-xl font-semibold mb-4">Overview :</h5>
-                                <p className="text-slate-400">It seems that only fragments of the original text remain in the Lorem Ipsum texts used today. One may speculate that over the course of time certain letters were added or deleted at various positions within the text.</p>
-                                <p className="text-slate-400">In the 1960s, the text suddenly became known beyond the professional circle of typesetters and layout designers when it was used for Letraset sheets (adhesive letters on transparent film, popular until the 1980s) Versions of the text were subsequently included in DTP programmes such as PageMaker etc.</p>
-                                <p className="text-slate-400">There is now an abundance of readable dummy texts. These are usually used when a text is required purely to fill a space. These alternatives to the classic Lorem Ipsum texts are often amusing and tell short, funny or nonsensical stories.</p>
+                                <h5 className="text-xl font-semibold mb-4">Overview:</h5>
+                                <p className="text-slate-400"> At our NFT marketplace, we are committed to protecting the privacy and security of our users' personal information. </p>
+                                <p className="text-slate-400"> This privacy policy explains how we collect, use, and disclose information on our platform.</p>
 
-                                <h5 className="text-xl font-semibold mb-4 mt-8">We use your information to :</h5>
-                                <ul className="list-none text-slate-400 mt-4">
+                                <h5 className="text-xl font-semibold mb-4 mt-8"> Information Collection:</h5>
+                                <p className="text-slate-400"> We collect information that you provide to us when you create an account, upload an NFT, make a purchase, or contact us.</p>
+                                <p className="text-slate-400"> This information may include your name, email address, payment information, and other personal details.</p>
+                                
+                                <h5 className="text-xl font-semibold mb-4 mt-8"> Use of Information:</h5>
+                                <p className="text-slate-400"> We use your personal information to provide and improve our services, process transactions, communicate with you, and comply with legal obligations. </p>
+                                <p className="text-slate-400"> We may also use non-personal information, such as website usage data, for analytics purposes.</p>
+
+                                <ul className="list-none text-slate-400 mt-4"> . Information We Collect:
+
                                     <li className="flex items-center mt-2"><MdOutlineArrowForward className="text-violet-600 text-base align-middle me-2"/>Digital Marketing Solutions for Tomorrow</li>
                                     <li className="flex items-center mt-2"><MdOutlineArrowForward className="text-violet-600 text-base align-middle me-2"/>Our Talented & Experienced Marketing Agency</li>
                                     <li className="flex items-center mt-2"><MdOutlineArrowForward className="text-violet-600 text-base align-middle me-2"/>Create your own skin to match your brand</li>

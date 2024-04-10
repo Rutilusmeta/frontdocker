@@ -17,7 +17,7 @@ export default function Footer() {
                                 <div className="grid md:grid-cols-2 grid-cols-1 items-center gap-[30px]">
                                     <div className="md:text-start text-center z-1">
                                         <h3 className="text-[26px] font-semibold text-slate-900 dark:text-white">Subscribe to Newsletter!</h3>
-                                        <p className="text-slate-400 max-w-xl mx-auto">Subscribe to get latest updates and information.</p>
+                                        <p className="text-slate-400 max-w-xl mx-auto">You can't spill the tea without this.</p>
                                     </div>
 
                                     <div className="subcribe-form z-1">
@@ -42,12 +42,12 @@ export default function Footer() {
                                     <Link to="#" className="text-[22px] focus:outline-none">
                                         <img src={logo_white} alt="" />
                                     </Link>
-                                    <p className="mt-6 text-gray-300">Buy, sell and discover exclusive digital assets by the top artists of NFTs world.</p>
+                                    <p className="mt-6 text-gray-300"> Explore, Discover and Engage with Queer Creators, Artists and Entrepreneurs .</p>
 
                                 </div>
 
                                 <div className="lg:col-span-2 md:col-span-4">
-                                    <h5 className="tracking-[1px] text-lg text-gray-100 font-semibold">Giglink</h5>
+                                    <h5 className="tracking-[1px] text-lg text-gray-100 font-semibold"> Marketplace </h5>
                                     <ul className="list-none footer-list mt-6">
                                         <li><Link to="/explore-one" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Explore Item</Link></li>
                                         <li className="mt-[10px]"><Link to="/auction" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Live Auction</Link></li>
@@ -70,7 +70,7 @@ export default function Footer() {
                                 </div>
 
                                 <div className="lg:col-span-3 md:col-span-4">
-                                    <h5 className="tracking-[1px] text-lg text-gray-100 font-semibold">Download the Giglink app</h5>
+                                    <h5 className="tracking-[1px] text-lg text-gray-100 font-semibold"> MetaQueer APK </h5>
 
                                     <ul className="list-none mt-6">
                                         <li className="inline"><img src={app} className="h-9 inline-block" alt="" /></li>
@@ -83,7 +83,7 @@ export default function Footer() {
                                         <div className="flex mt-6">
                                             <Mail className="w-5 h-5 text-violet-600 me-3 mt-1"></Mail>
                                             <div className="">
-                                                <Link to="mailto:contact@example.com" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out">contact@example.com</Link>
+                                                <Link to="mailto:info@metaqueer.space" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out">info@metaqueer.space </Link>
                                             </div>
                                         </div>
 
@@ -105,7 +105,7 @@ export default function Footer() {
                 <div className="container text-center">
                     <div className="grid md:grid-cols-2 items-center gap-6">
                         <div className="md:text-start text-center">
-                            <p className="mb-0 text-gray-300">© {(new Date().getFullYear())}{" "} Giglink. Design & Develop with <i className="mdi mdi-heart text-red-600"></i> by <Link to="https://shreethemes.in/" target="_blank" className="text-reset">Shreethemes</Link>.</p>
+                            <p className="mb-0 text-gray-300">© {(new Date().getFullYear())}{" "} All Rights Reserved. <i className="mdi mdi-heart text-red-600"></i> MetaQueer Inc <Link to="https://metaqueer.space/" target="_blank" className="text-reset">MetaQueer</Link>.</p>
                         </div>
 
                         <ul className="list-none md:text-end text-center">
@@ -113,10 +113,10 @@ export default function Footer() {
                             <li className="inline space-x-1"><Link to="https://dribbble.com/shreethemes" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><FiDribbble className='text-base'/></Link></li>
                             <li className="inline space-x-1"><Link to="https://www.behance.net/shreethemes" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><BiLogoBehance className='text-base'/></Link></li>
                             <li className="inline space-x-1"><Link to="http://linkedin.com/company/shreethemes" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><FaLinkedin className='text-base'/></Link></li>
-                            <li className="inline space-x-1"><Link to="https://www.facebook.com/shreethemes" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><LiaFacebookF className='text-base'/></Link></li>
-                            <li className="inline space-x-1"><Link to="https://www.instagram.com/shreethemes/" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><AiOutlineInstagram className='text-base'/></Link></li>
-                            <li className="inline space-x-1"><Link to="https://twitter.com/shreethemes" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><AiOutlineTwitter className='text-base'/></Link></li>
-                            <li className="inline space-x-1"><Link to="mailto:support@shreethemes.in" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><FaRegEnvelope className="align-middle"/></Link></li>
+                            <li className="inline space-x-1"><Link to="https://www.facebook.com/metaqueer" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><LiaFacebookF className='text-base'/></Link></li>
+                            <li className="inline space-x-1"><Link to="https://www.instagram.com/metaqueer.space/" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><AiOutlineInstagram className='text-base'/></Link></li>
+                            <li className="inline space-x-1"><Link to="https://twitter.commetaqueerspace" target="_blank" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><AiOutlineTwitter className='text-base'/></Link></li>
+                            <li className="inline space-x-1"><Link to="mailto:info@metaqueer.space" className="btn btn-icon btn-sm border border-gray-800 rounded-md hover:border-violet-600 dark:hover:border-violet-600 hover:bg-violet-600 dark:hover:bg-violet-600"><FaRegEnvelope className="align-middle"/></Link></li>
                         </ul>
                     </div>
                 </div>

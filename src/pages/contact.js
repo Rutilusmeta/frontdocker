@@ -22,7 +22,7 @@ export default function Contact() {
 
                 <div className="absolute text-center z-10 bottom-5 start-0 end-0 mx-3">
                     <ul className="breadcrumb tracking-[0.5px] breadcrumb-light mb-0 inline-block">
-                        <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white/50 hover:text-white"><Link to="/">Giglink</Link></li>
+                        <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white/50 hover:text-white"><Link to="/">MetaQueer</Link></li>
                         <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white" aria-current="page">Contact Us</li>
                     </ul>
                 </div>
@@ -63,7 +63,7 @@ export default function Contact() {
                                 <p className="text-slate-400 mt-3">The phrasal sequence of the is now so that many campaign and benefit</p>
 
                                 <div className="mt-5">
-                                    <Link to="mailto:contact@example.com" className="btn btn-link text-violet-600 hover:text-violet-600 after:bg-violet-600 duration-500 ease-in-out">contact@example.com</Link>
+                                    <Link to="mailto:info@metaqueer.space" className="btn btn-link text-violet-600 hover:text-violet-600 after:bg-violet-600 duration-500 ease-in-out">contact@example.com</Link>
                                 </div>
                             </div>
                         </div>

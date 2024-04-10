@@ -10,23 +10,23 @@ export default function Team() {
     const teamData = [
         {
             image:image,
-            name:"Jack John",
-            title:"Designer"
+            name:"Richie Try to Reach it",
+            title:"Jack of all trades, Master of None."
         },
         {
             image:image1,
-            name:"Jack John",
-            title:"Designer"
+            name:"Charlie The Italian One",
+            title:"Technology Muse"
         },
         {
             image:image2,
-            name:"Jack John",
-            title:"Designer"
+            name:"Charl The Boer",
+            title:"Technology Design"
         },
         {
             image:image3,
-            name:"Jack John",
-            title:"Designer"
+            name:"Glen Make a Plan",
+            title:"Administrative"
         }
     ]
     return (
@@ -35,7 +35,7 @@ export default function Team() {
                 <h6 className="text-violet-600 font-medium mb-2">Our Minds</h6>
                 <h3 className="mb-4 md:text-3xl text-2xl md:leading-snug leading-snug font-semibold">Management Team</h3>
 
-                <p className="text-slate-400 max-w-xl mx-auto">We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!</p>
+                <p className="text-slate-400 max-w-xl mx-auto">We are creating a marketplace dedicated to connecting Queer artists, Creators and Entrepreneurs with their fans and unique token collectors!</p>
             </div>
 
             <div className="grid md:grid-cols-12 grid-cols-1 mt-8 gap-[30px]">

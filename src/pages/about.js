@@ -27,7 +27,7 @@ export default function About() {
 
                 <div className="absolute text-center z-10 bottom-5 start-0 end-0 mx-3">
                     <ul className="breadcrumb tracking-[0.5px] breadcrumb-light mb-0 inline-block">
-                        <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white/50 hover:text-white"><Link to="/">Giglink</Link></li>
+                        <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white/50 hover:text-white"><Link to="/">MetaQueer</Link></li>
                         <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-white" aria-current="page">About Us</li>
                     </ul>
                 </div>
@@ -59,10 +59,11 @@ export default function About() {
                         <div className="lg:col-span-7">
                             <div className="lg:ms-5">
                                 <span className="text-violet-600 font-medium">Creative Vision & Mission</span>
-                                <h3 className="mb-4 md:text-3xl text-2xl md:leading-snug leading-snug font-semibold">We develop & create <br /> digital art.</h3>
+                                <h3 className="mb-4 md:text-3xl text-2xl md:leading-snug leading-snug font-semibold">Creating a marketplace focussed <br /> spesifically on Queer people.</h3>
 
-                                <p className="text-slate-400 max-w-xl">We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!</p>
-                                <p className="text-slate-400 max-w-xl mt-4">It seems that only fragments of the original text remain in the Lorem Ipsum texts used today. One may speculate that over the course of time certain letters were added or deleted at various positions within the text. This might also explain why one can now find slightly different versions.</p>
+                                <p className="text-slate-400 max-w-xl">We are creating a space to celebrate Queer culture and stimulate the Pink economy.</p>
+                                <p className="text-slate-400 max-w-xl mt-4">MetaQueer will allow for representation of a community in the new technological space. It will focus on promoting participation in the Web3.0 era by creating opportunities for the LGBTIQA community while providing a safe space for all members. 
+A platform like MetaQueer will greatly enhance a sense of identity. Through participation on the platform, it will belong to everybody</p>
 
                                 <div className="mt-6">
                                     <Link to="/contact" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full me-2 mt-2 inline-flex items-center"><FaRegEnvelope className='me-1'/> Contact us</Link>
@@ -75,9 +76,9 @@ export default function About() {
                 <div className="container lg:mt-24 mt-16 lg:pt-24 pt-16">
                     <div className="absolute inset-0 opacity-25 dark:opacity-50 bg-[url('../../assets/images/map.png')] bg-no-repeat bg-center"></div>
                     <div className="relative grid grid-cols-1 pb-8 text-center z-1">
-                        <h3 className="mb-4 md:text-3xl text-2xl md:leading-snug leading-snug font-semibold text-black dark:text-white">Trusted by more than 20K users</h3>
+                        <h3 className="mb-4 md:text-3xl text-2xl md:leading-snug leading-snug font-semibold text-black dark:text-white">A Queer Safe Space </h3>
 
-                        <p className="text-slate-400 max-w-xl mx-auto">We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!</p>
+                        <p className="text-slate-400 max-w-xl mx-auto">Explore, Discover and Engage with a wide range of Queer creators, artists and entrepreneurs </p>
                     </div>
 
                     <div className="relative grid md:grid-cols-3 grid-cols-1 items-center mt-8 gap-[30px] z-1">
