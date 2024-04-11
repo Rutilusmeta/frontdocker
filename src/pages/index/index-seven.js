@@ -53,9 +53,9 @@ export default function IndexSeven() {
                             <div className="grid grid-cols-1 justify-center text-center">
                                 <div className="relative">
                                     <div className="relative mb-5">
-                                        <h1 className="font-bold lg:leading-snug leading-snug text-4xl lg:text-6xl text-white">The way to Find <br /> any <span className="bg-gradient-to-l from-red-600 to-violet-600 text-transparent bg-clip-text">Digital</span> Content</h1>
+                                        <h1 className="font-bold lg:leading-snug leading-snug text-4xl lg:text-6xl text-white">Discover, Create and Engage <br /> with <span className="bg-gradient-to-l from-red-600 to-violet-600 text-transparent bg-clip-text">Queer</span> Creators!</h1>
                                     </div>
-                                    <p className="text-white/70 text-lg max-w-xl mx-auto">We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!</p>
+                                    <p className="text-white/70 text-lg max-w-xl mx-auto">"We are a martketplace focussed on the Queer community. We shine the spotlight on Queer creators in a safe space!</p>
 
                                     <div className="mt-8">
                                         <Link to="/explore-one" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full">Explore now</Link>

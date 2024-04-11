@@ -8,7 +8,7 @@ const EnvDiv = () => {return (
             DEV ENV<br />
             Chain address: {process.env.REACT_APP_CHAIN_ADDRESS_DEV}<br />
             Chain ID: {process.env.REACT_APP_CHAIN_ID_DEV}<br />
-            API address: {process.env.REACT_APP_API_ADDRESS_DEV}.<br />
+            API address: {process.env.REACT_APP_API_ADDRESS_DEV}<br />
           </div>
         </>
       )}
@@ -18,7 +18,7 @@ const EnvDiv = () => {return (
             TESTING ENV<br />
             Chain address: {process.env.REACT_APP_CHAIN_ADDRESS_TESTING}<br />
             Chain ID: {process.env.REACT_APP_CHAIN_ID_TESTING}<br />
-            API address: {process.env.REACT_APP_API_ADDRESS_TESTING}.<br />
+            API address: {process.env.REACT_APP_API_ADDRESS_TESTING}<br />
           </div>
       </>
       )}

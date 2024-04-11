@@ -82,7 +82,9 @@ function App()
             <Route path="/explore-two" element={<ExploreTwo />} />
             <Route path="/explore-three" element={<ExploreThree />} />
             <Route path="/index-four" element={<IndexFour />} />
-            <Route path='/upload-work' element={<UploadWork />} />
+            <Route exact path='/upload-work' element={<ProtectedRoute/>}>
+              <Route exact path='/upload-work' element={<UploadWork/>}/>
+            </Route>
             <Route path="/index-six" element={<IndexSix />} />
             <Route path="/index-five" element={<IndexFive />} />
 

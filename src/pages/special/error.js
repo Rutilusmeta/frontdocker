@@ -26,7 +26,7 @@ export default function Error() {
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className="mb-0 text-slate-400">© {(new Date().getFullYear())}{" "} Giglink. Design & Develop with <i className="mdi mdi-heart text-red-600"></i> by <Link href="https://shreethemes.in/" target="_blank" rel="noopener noreferrer" className="text-reset">Shreethemes</Link>.</p>
+                            <p className="mb-0 text-gray-300">© {(new Date().getFullYear())}{" "} All Rights Reserved. <i className="mdi mdi-heart text-red-600"></i> MetaQueer Inc <Link to="https://metaqueer.space/" target="_blank" className="text-reset">MetaQueer</Link>.</p>
                             </div>
                         </div>
                     </div>

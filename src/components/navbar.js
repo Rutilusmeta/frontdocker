@@ -4,17 +4,16 @@ import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
 //import image from '../assets/images/client/05.jpg';
 import { Link } from "react-router-dom";
-import { PiWalletBold, AiOutlineCopy, AiOutlineUser, LuSettings, LiaSignOutAltSolid } from "../assets/icons/vander"
+import EnvDiv from './env-div';
+import { PiWalletBold/*, AiOutlineCopy*/, AiOutlineUser, LuSettings, LiaSignOutAltSolid } from "../assets/icons/vander"
 import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
 import UserContext from '../contexts/UserContext';
-
-import EnvDiv from './env-div';
-
-import Web3 from 'web3';
+import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
 
 export default function Navbar() 
 {
     const { userData, checkUserData } = useContext(UserContext);
+    const { getAccounts, getBalance } = useNFTMarketplace();
     const [isDropdown, openDropdown] = useState(true);
     const [isOpen, setMenu] = useState(true);
     const { connect, disconnect } = useConnect();
@@ -22,63 +21,40 @@ export default function Navbar()
     const [imageSrc, setImageSrc] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
-    const [addressBalance, setAddressBalance] = useState('');
+    const [addressBalance, setAddressBalance] = useState(0);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const initialized = useRef(false);
 
-    const isMetaMaskInstalled = () => {
+    const isMetaMaskInstalled = () => 
+    {
         return Boolean(window.ethereum && window.ethereum.isMetaMask);
     };
 
-    const onClickConnect = async () => {
-        if (!isMetaMaskInstalled()) {
+    const onClickConnect = async () => 
+    {
+        if (!isMetaMaskInstalled()) 
+        {
             setIsModalOpen(true);
             return;
         }
-        try {
-            // Request access to the user's MetaMask accounts
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
-    
-            // Get the user's accounts from MetaMask
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            console.log("Accounts", accounts);
-    
-            // Set the wallet address
-            const userAddress = accounts[0];
-            setWalletAddress(userAddress.slice(0, 6) + '...' + userAddress.slice(-7));
-    
-            // Initialize Web3 with the current provider
-            const web3 = new Web3(window.ethereum);
-    
-            // Fetch the balance using Web3
-            const balance = await web3.eth.getBalance(userAddress);
-            console.log("Balance", balance);
-    
-            // Convert balance from wei to ether (1 ether = 10^18 wei)
-            const balanceInEther = web3.utils.fromWei(balance, 'ether');
-            console.log("Balance in Ether", balanceInEther);
-            const roundedBalance = Number.parseFloat(balanceInEther).toFixed(4);
-            console.log("Balance in Ether (rounded)", roundedBalance);
-            setAddressBalance(roundedBalance);
-        } catch (error) {
+        try 
+        {
+            const accounts = await getAccounts();
+            setWalletAddress(accounts[0]);
+            const balance = await getBalance(accounts[0]);
+            setAddressBalance(balance);
+            setIsDialogOpen(true);
+        } 
+        catch (error) 
+        {
             console.error('Error fetching address balance from MetaMask:', error);
         }
     };
 
-    const closeModal = () => {
+    const closeModal = () => 
+    {
         setIsModalOpen(false);
     };
-
-    /*const connectWallet = async () => {
-        if (isMetaMaskInstalled()) {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (!!accounts[0]) {
-                setWalletAddress(
-                    accounts[0].slice(0, 6) + '...' + accounts[0].slice(-7)
-                );
-            }
-        }
-    };*/
-
 
     const activateMenu = useCallback(() => {
         var menuItems = document.getElementsByClassName("sub-menu-item");
@@ -184,6 +160,11 @@ export default function Navbar()
         await disconnect();
         window.location.reload();
     };
+
+    /*if (userInfo) {
+        console.log(userInfo);
+        console.log("AJA");
+    }*/
 
     window.addEventListener("scroll", windowScroll);
     function windowScroll() {
@@ -408,13 +389,13 @@ export default function Navbar()
                                 <div className="mt-10 px-4">
                                     <h5 className="font-semibold text-[15px]">Wallet:</h5>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[13px] text-slate-400">{walletAddress}</span>
-                                        <Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>
+                                        <span className="text-[13px] text-slate-400">{walletAddress.slice(0, 6) + '...' + walletAddress.slice(-7)}</span>
+                                        {/*<Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>*/}
                                     </div>
                                 </div>
 
                                 <div className="mt-4 px-4">
-                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">0.{addressBalance}</span></h5>
+                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">{addressBalance}</span></h5>
                                 </div>
 
                                 <ul className="py-2 text-start">
@@ -446,7 +427,7 @@ export default function Navbar()
                                     <li><Link to="/item-detail" className="sub-menu-item"> Item Detail</Link></li>
                                     <li><Link to="/activity" className="sub-menu-item"> Activities</Link></li>
                                     <li><Link to="/collections" className="sub-menu-item">Collections</Link></li>
-                                    <li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>
+                                    {/*<li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>*/}
                                 </ul>
                             </li>
                             <li className="has-submenu parent-parent-menu-item">
@@ -458,7 +439,6 @@ export default function Navbar()
                                             <li><Link to="/creators" className="sub-menu-item"> Creators</Link></li>
                                             <li><Link to="/creator-profile" className="sub-menu-item"> Creator Profile</Link></li>
                                             <li><Link to="/creator-profile-edit" className="sub-menu-item"> Profile Edit</Link></li>
-                                            <li><Link to="/become-creator" className="sub-menu-item"> Become Creator</Link></li>
                                         </ul>
                                     </li>
                                     <li className="has-submenu parent-menu-item"><Link to="#"> Blog </Link><span className="submenu-arrow"></span>
@@ -495,12 +475,30 @@ export default function Navbar()
                                     <li><Link to="/privacy" className="sub-menu-item">Privacy Policy</Link></li>
                                 </ul>
                             </li>
-
+                            {userInfo ? (
+                                <li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>
+                            ) : (
+                                <li><Link to="/become-creator" className="sub-menu-item">Become Creator</Link></li>
+                            )}
                             <li><Link to="/contact" className="sub-menu-item">Contact</Link></li>
-                        </ul>
+                    </ul>
+                </div>
+            </div>
+            <div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                    <div className="relative bg-white rounded-lg max-w-lg w-full p-4">
+                        <div className="text-center">
+                            <p className="text-lg font-medium text-black">Address:</p>
+                            <p className="text-lg font-medium text-black">{walletAddress}</p>
+                            <p className="text-lg font-medium text-black">Balance:</p>
+                            <p className="text-lg font-medium text-black">{addressBalance} ETH</p>
+                            <button className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-violet-600 hover:text-white" onClick={() => setIsDialogOpen(false)}>Close</button>
+                        </div>
                     </div>
                 </div>
-            </nav>
-        </>
+            </div>
+        </nav>
+    </>
     )
 }

@@ -8,11 +8,11 @@ import {AiOutlineDashboard, PiBrowsers, AiOutlineSetting, IoMdLogOut} from "../.
 import FormData from "form-data";
 import axios from "axios";
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
-import TransactionConfirmationDialog from '../../components/TransactionConfirmationDialog';
 
-export default function UploadWork() {
+export default function UploadWork() 
+{
 
-    const { handleAccountCheck, createMarketItem } = useNFTMarketplace();
+    const { createMarketItem, connectWallet, getAccounts } = useNFTMarketplace();
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
     //const [transactionFees, setTransactionFees] = useState(null);
 
@@ -21,19 +21,7 @@ export default function UploadWork() {
 	const [imageURI, setImageURI] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const openTransactionDialog =  () => {
-        const account = handleAccountCheck();
-        if(account) {
-            setIsConfirmationOpen(true);
-        }
-    };
-
-    const handleConfirmTransaction = async () => {
-        await mintNFT();
-        setIsConfirmationOpen(false);
-    };
-
-    const checkCreateNFTForm = (event) => {
+    const createNFTForm = async (event) => {
         event.preventDefault();
 		if (imageURI === "") {
 			alert("Please upload an image");
@@ -42,38 +30,47 @@ export default function UploadWork() {
 			alert("Please add a title");
 			return false;
 		}
-        openTransactionDialog();
+        //openTransactionDialog();
+        await mintNFT();
         return true;
     }
 
-    const mintNFT = async () => {
-        const account = handleAccountCheck();
-        try{
-            const jsonData = {
+    const mintNFT = async () => 
+    {
+        try
+        {
+            const jsonData = 
+            {
                 name: title,
                 description: description,
-                image: imageURI,
+                image: imageURI
             };
-            console.log(jsonData);
-            let res = await axios.post(process.env.REACT_APP_IPFS_JSON_URL, jsonData, {
-                auth: {
+            console.log("jsonData",jsonData);
+            let res = await axios.post(process.env.REACT_APP_IPFS_JSON_URL, jsonData, 
+            {
+                auth: 
+                {
                     username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
                     password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
-                },
+                }
             });
             const tokenURI = res.data.fastUrl;
-            createMarketItem(tokenURI, 1000, account);
+            const accounts = await getAccounts();
+           return await createMarketItem(tokenURI, 1000, accounts[0]);
         }
-        catch (error) {
-            console.error(error);
+        catch (error) 
+        {
+            console.error("Error creating market item", error);
         }
 	};
 
-    useEffect(() => {
+    useEffect(() => 
+    {
         document.documentElement.classList.add('dark');
     });
 
-    const handleChange = async () => {
+    const handleChange = async () => 
+    {
 		const fileUploader = document.querySelector("#input-file");
 		const getFile = fileUploader.files;
 		if (getFile.length !== 0) {
@@ -82,21 +79,26 @@ export default function UploadWork() {
 		}
 	};
 
-    const readFile = async (uploadedFile) => {
-        if (uploadedFile) {
+    const readFile = async (uploadedFile) => 
+    {
+        if (uploadedFile) 
+        {
             setLoading(true);
             try{
                 const formData = new FormData();
                 formData.append("file", uploadedFile);
                 const reader = new FileReader();
-                let res = await axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, formData, {
-                    auth: {
+                let res = await axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, formData, 
+                {
+                    auth: 
+                    {
                         username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
                         password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
                     },
                 });
                 setImageURI(res.data.fastUrl);
-                reader.onload = () => {
+                reader.onload = () => 
+                {
                     const parent = document.querySelector('.preview-box');
                     parent.innerHTML = `<img class="preview-content" src=${reader.result} />`;
                 };
@@ -238,7 +240,7 @@ export default function UploadWork() {
                                             </div>
 
                                             <div className="col-span-12">
-                                                <button type="submit" onClick={checkCreateNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>Create Item</button>
+                                                <button type="submit" onClick={createNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>Create Item</button>
                                             </div>
                                         </div>
                                     </form>
@@ -248,7 +250,6 @@ export default function UploadWork() {
                     </div>
                 </div>
             </section>
-            <TransactionConfirmationDialog isOpen={isConfirmationOpen} onClose={() => setIsConfirmationOpen(false)} onConfirm={handleConfirmTransaction}/>
             <Footer />
             <Switcher />
         </>
