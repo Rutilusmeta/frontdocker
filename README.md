@@ -1,19 +1,30 @@
 # NFT Market
 
-Backend API:
+Nft market frontend react development code
+
+Backend API
 https://github.com/ground-creative/nft-market-backend
 
-Backend Docker:
+Backend API Docker
 https://github.com/ground-creative/nft-market-backend-docker
 
-Frontend React:
+Frontend React
 https://github.com/Rutilusmeta/nft-market-frontend
 
-Frontend Docker:
+Frontend React Docker
 https://github.com/ground-creative/nft-market-frontend-docker
 
-Ganache Docker Test Node:
+Ganache Test Node Docker
 https://github.com/Rutilusmeta/docker-ganache-node
+
+Frontend Apache Docker
+https://github.com/ground-creative/nft-market-docker-apache
+
+Frontend Build
+https://github.com/ground-creative/nft-market-frontend-build
+
+Nginx Proxy
+https://github.com/ground-creative/nft-market-docker-nginx
 
 Project template:\
 [https://themeforest.net/item/giglink-react-nextjs-nft-marketplace-template/47154319](https://themeforest.net/item/giglink-react-nextjs-nft-marketplace-template/47154319)

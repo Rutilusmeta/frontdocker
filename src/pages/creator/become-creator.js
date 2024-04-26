@@ -1,12 +1,17 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import creator from '../../assets/images/creator.png';
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
+import { useAuthCore } from '@particle-network/auth-core-modal';
 
 export default function BecomeCreator() {
-    const handleChange = () => {
+
+    const { userInfo } = useAuthCore();
+
+    const handleChange = () => 
+    {
         const fileUploader = document.querySelector('#input-file');
         const getFile = fileUploader.files
         if (getFile.length !== 0) {
@@ -26,6 +31,16 @@ export default function BecomeCreator() {
             reader.readAsDataURL(uploadedFile);
         }
     };
+    
+    // quick fix when user is logged in
+    useEffect(() => 
+    {
+        if (userInfo)
+        {
+            window.location.href = "/";
+        }
+    });
+
     return (
         <>
             <Navbar />

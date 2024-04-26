@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useContext, useCallback } from 'rea
 import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
+import urls from '../constants/urls'
 //import image from '../assets/images/client/05.jpg';
 import { Link } from "react-router-dom";
 import EnvDiv from './env-div';
@@ -353,14 +354,23 @@ export default function Navbar()
                             </button>
                         </li>
 
-                        {isModalOpen && (
-                            <div id="modal-metamask" className="modal show">
-                                <button onClick={closeModal} className="close" id="close-modal">
-                                    Close
-                                </button>
-                                {/* Modal content here */}
+                        <div className={`fixed inset-0 z-10 overflow-y-auto ${isModalOpen ? 'block' : 'hidden'}`}>
+                            <div className="flex items-center justify-center min-h-screen">
+                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                                <div className="relative bg-white rounded-lg max-w-lg w-full p-4">
+                                    <h2 className="text-xl text-black font-semibold mb-4">Install MetaMask</h2>
+                                    <p className="text-black">
+                                        MetaMask is a digital wallet that allows you to interact with Ethereum decentralized applications (DApps) in your browser.
+                                        <br />
+                                        To use this application, you need to have MetaMask installed in your browser.
+                                        <br />
+                                        You can download MetaMask from <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">metamask.io</a>.
+                                    </p>
+                                    <button className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" onClick={() => setIsModalOpen(false)}>Close</button>
+                                </div>
                             </div>
-                        )}
+                        </div>
+
                         {/*<div id="myPublicAddress">{walletAddress}</div>*/}
 
                         <li className="dropdown inline-block relative ps-1">
@@ -386,19 +396,20 @@ export default function Navbar()
                                     </div>
                                 </div>
 
-                                <div className="mt-10 px-4">
+                               {/*<div className="mt-10 px-4">
                                     <h5 className="font-semibold text-[15px]">Wallet:</h5>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[13px] text-slate-400">{walletAddress.slice(0, 6) + '...' + walletAddress.slice(-7)}</span>
-                                        {/*<Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>*/}
-                                    </div>
+                                        */}{/*<Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>*/}
+                                    {/* </div>
                                 </div>
 
                                 <div className="mt-4 px-4">
                                     <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">{addressBalance}</span></h5>
-                                </div>
+                                </div>*/}
 
-                                <ul className="py-2 text-start">
+                                {/*<ul className="py-2 text-start">*/}
+                                <ul className="mt-10 px-4">
                                     <li>
                                         <Link to="/creator-profile" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
                                     </li>
@@ -471,16 +482,17 @@ export default function Navbar()
                                             <li><Link to="/helpcenter-support" className="sub-menu-item"> Support</Link></li>
                                         </ul>
                                     </li>
-                                    <li><Link to="/terms" className="sub-menu-item">Terms Policy</Link></li>
-                                    <li><Link to="/privacy" className="sub-menu-item">Privacy Policy</Link></li>
+                                    <li><Link to={urls.terms} className="sub-menu-item">Terms Policy</Link></li>
+                                    <li><Link to={urls.upload_work} className="sub-menu-item">Privacy Policy</Link></li>
                                 </ul>
                             </li>
                             {userInfo ? (
-                                <li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>
+                                <li><Link to={urls.upload_work} className="sub-menu-item">Upload Works</Link></li>
                             ) : (
-                                <li><Link to="/become-creator" className="sub-menu-item">Become Creator</Link></li>
+                                <li><Link to={urls.become_creator} className="sub-menu-item">Become Creator</Link></li>
                             )}
-                            <li><Link to="/contact" className="sub-menu-item">Contact</Link></li>
+                            <li><Link to={urls.user_nfts} className="sub-menu-item">My NFT</Link></li>
+                            <li><Link to={urls.contact} className="sub-menu-item">Contact</Link></li>
                     </ul>
                 </div>
             </div>

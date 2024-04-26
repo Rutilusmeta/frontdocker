@@ -14,11 +14,11 @@ export default function Footer() {
                     <div className="relative py-16">
                         <div className="relative w-full">
                             <div className="relative -top-40 bg-white dark:bg-slate-900 lg:px-8 px-6 py-10 rounded-xl shadow dark:shadow-gray-800 overflow-hidden">
-                                <div className="grid md:grid-cols-2 grid-cols-1 items-center gap-[30px]">
+                               {/* <div className="grid md:grid-cols-2 grid-cols-1 items-center gap-[30px]">
                                     <div className="md:text-start text-center z-1">
                                         <h3 className="text-[26px] font-semibold text-slate-900 dark:text-white">Subscribe to Newsletter!</h3>
                                         <p className="text-slate-400 max-w-xl mx-auto">You can't spill the tea without this.</p>
-                                    </div>
+    </div>
 
                                     <div className="subcribe-form z-1">
                                         <form className="relative max-w-lg md:ms-auto">
@@ -26,8 +26,8 @@ export default function Footer() {
                                             <button type="submit" className="btn absolute top-[2px] end-[3px] h-[46px] bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full">Subscribe</button>
                                         </form>
                                     </div>
-                                </div>
-
+                                </div>*/}
+                                
                                 <div className="absolute -top-5 -start-5">
                                     <FaRegEnvelope className="lg:text-[150px] text-7xl text-slate-900/5 dark:text-white/5 -rotate-45"/>
                                 </div>

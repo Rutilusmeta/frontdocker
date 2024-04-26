@@ -3,16 +3,21 @@ require('dotenv').config();
 require("@nomicfoundation/hardhat-toolbox");
 require('@openzeppelin/hardhat-upgrades');
 
-module.exports = {
+module.exports = 
+{
   //defaultNetwork: "ganache",
-  networks: {
+  networks: 
+  {
     //"hardhat": {
     //  allowUnlimitedContractSize: true
     //},
-    "dev": {
-      chainId: parseInt(process.env.REACT_APP_CHAIN_DEV_ID),
-      url: process.env.REACT_APP_CHAIN_DEV_ADDRESS,
-      allowUnlimitedContractSize: true
+    "dev": 
+    {
+      chainId: parseInt(process.env.REACT_APP_CHAIN_ID_DEV),
+      url: process.env.REACT_APP_CHAIN_ADDRESS_DEV.
+                          replace('ws://', 'http://').
+                          replace('wss://', 'https://'),
+      //allowUnlimitedContractSize: true
       // accounts: [privateKey1, privateKey2, ...]
     }
   },
@@ -23,7 +28,8 @@ module.exports = {
       runs: 1000,
     },
   },*/
-  paths: {
+  paths: 
+  {
     artifacts: "./src/contracts/abi/",
     tests: "./src/contracts/test",
     cache: "./src/contracts/cache",

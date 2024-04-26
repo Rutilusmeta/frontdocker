@@ -44,6 +44,22 @@ export const UserProvider = ({ children }) =>
         localStorage.removeItem('userData');
     };
 
+    const getUserAvatar = (userData) =>
+    {
+        if (userData && userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
+        {
+            return userData.avatar;
+        }
+        else if (userData && userData.avatar)
+        {
+            return `/avatar/${userData.avatar}`;
+        }
+        else
+        {
+            return `/avatar/1.jpg`;
+        }
+    }
+
     const checkUserData = (userInfo) =>
     {
         //console.log("User info from particle userInfo:", userInfo);
@@ -131,7 +147,7 @@ export const UserProvider = ({ children }) =>
     }, [userData, userInfo]);
 
     return (
-        <UserContext.Provider value={{ userData, updateUser, clearUser, checkUserData, saveUserData }}>
+        <UserContext.Provider value={{ userData, updateUser, clearUser, checkUserData, saveUserData, getUserAvatar }}>
             {!loading && children}
         </UserContext.Provider>
     );

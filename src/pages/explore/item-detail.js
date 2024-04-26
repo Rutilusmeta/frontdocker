@@ -1,19 +1,24 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import image from '../../assets/images/items/3.gif';
-import image1 from '../../assets/images/avatar/1.jpg';
+/*import image1 from '../../assets/images/avatar/1.jpg';
 import image3 from '../../assets/images/items/2.gif';
 import image4 from '../../assets/images/items/1.jpg';
 import image5 from '../../assets/images/items/2.jpg';
-import image6 from '../../assets/images/items/1.gif';
+import image6 from '../../assets/images/items/1.gif';*/
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { data } from '../../data/data';
 import {IoMdClose,BsExclamationOctagon} from "../../assets/icons/vander"
+import misc from "../../constants/misc";
+import urls from '../../constants/urls';
+import axios from 'axios'; // Import axios for HTTP requests
+import UserContext from '../../contexts/UserContext';
+import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
 
-export default function ItemDetail() {
-
+export default function ItemDetail() 
+{
     const params = useParams();
     const id = params.id
     const creater = data.find((creatorr) => creatorr.id === parseInt (id));
@@ -21,28 +26,81 @@ export default function ItemDetail() {
     const [activeIndex, setIndex] = useState(0);
     const [placeBid , setPlaceBid] = useState(false)
     const [ buyNow, setBuyNow] =  useState(false)
+    const { getMarketItem, formatPrice, buyMarketItem, connectWallet } = useNFTMarketplace();
+    const initialized = useRef(false);
+    const [marketItem, setMarketItem] = useState(false);
 
-    useEffect(() => {
+    useEffect(() => 
+    {
         document.documentElement.classList.add('dark');
-    }, []);
+        if (/*userInfo &&*/ !initialized.current) 
+        {
+            initialized.current = true;
+            console.log(params);
+            getMarketItem(id)
+                .then(item => {
+                    console.log(item);
+                    return axios.get(item.tokenURI)
+                        .then(response => {
+                            const { name, description, image } = response.data;
+                            const avatar = image;
+                            const etherPrice = formatPrice(item.price);
+                            const updatedItem = {
+                                ...item,
+                                name,
+                                description,
+                                image,
+                                avatar,
+                                etherPrice
+                            };
+                            setMarketItem(updatedItem);
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching market item:', error);
+                });
+        }
+    }, [getMarketItem]);
+
+    const buyMarketItemHandler = async (tokenId) => 
+    {
+        const accounts = await connectWallet();
+        console.log(accounts[0],marketItem.owner);
+        if (marketItem.owner.toLowerCase() === accounts[0].toLowerCase())
+        {
+            alert("You already own this item");
+            return;
+        }
+        try
+        {
+            //console.log("Buy now");
+            const result = await buyMarketItem(tokenId, marketItem.etherPrice);
+        }
+        catch (error) 
+        {
+            console.error("Error creating market item", error);
+        }
+	};
+
     return (
         <>
             <Navbar />
             <section className="relative pt-28 md:pb-24 pb-16">
                 <div className="container">
+                {marketItem && (
                     <div className="grid lg:grid-cols-12 md:grid-cols-2 grid-cols-1 gap-[30px]">
                         <div className="lg:col-span-5">
-                            <img src={creater?.image ? creater?.image : image} className="rounded-md shadow dark:shadow-gray-700" alt="" />
+                            <img src={marketItem.image} className="rounded-md shadow dark:shadow-gray-700" alt="" />
 
                             <div className="bg-gray-50 dark:bg-slate-800 rounded-md shadow dark:shadow-gray-800 mt-[30px] p-6">
                                 <div>
                                     <span className="font-medium text-slate-400 block mb-1">Contract Address</span>
-                                    <Link to="#" className="font-medium text-violet-600 underline block">1fsvtgju51ntgeryimghf6ty7o9n3r3er246</Link>
+                                    <Link to="#" className="font-medium text-violet-600 underline block">{process.env.REACT_APP_CONTRACT_PROXY_ADDRESS}</Link>
                                 </div>
 
                                 <div className="mt-4">
                                     <span className="font-medium text-slate-400 block mb-1">Token ID</span>
-                                    <span className="font-medium block">458342529342930944</span>
+                                    <span className="font-medium block">#{marketItem.tokenId.toString()}</span>
                                 </div>
 
                                 <div className="mt-4">
@@ -50,36 +108,37 @@ export default function ItemDetail() {
                                     <span className="font-medium block">ETH</span>
                                 </div>
 
-                                <div className="mt-4">
+                                {/*<div className="mt-4">
                                     <span className="font-medium text-slate-400 block mb-1">Deposit & Withdraw</span>
                                     <span className="font-medium block">Unsupported</span>
-                                </div>
+                                </div>*/}
                             </div>
                         </div>
 
                         <div className="lg:col-span-7 lg:ms-8">
-                            <h5 className="md:text-2xl text-xl font-semibold">{creater?.title ? creater?.title :"Probably A Label #3277"}</h5>
+                            <h5 className="md:text-2xl text-xl font-semibold">{marketItem.name} (#{marketItem.tokenId.toString()})</h5>
 
-                            <span className="font-medium text-slate-400 block mt-2">From this collection: <Link to="/creator-profile" className="text-violet-600">{creater?.subtext ? creater?.subtext : "@FunnyGuy"}</Link></span>
+                            {/*<span className="font-medium text-slate-400 block mt-2">From this collection: <Link to="/creator-profile" className="text-violet-600">{creater?.subtext ? creater?.subtext : "@FunnyGuy"}</Link></span>*/}
 
-                            <p className="text-slate-400 mt-4">Hey guys! New exploration about NFT Marketplace Web Design, this time I'm inspired by one of my favorite NFT website called Giglink (with crypto payment)! What do you think?</p>
-                            <p className="text-slate-400 mt-4">What does it mean? Biomechanics is the study of the structure, function and motion of the mechanical aspects of biological systems, at any level from whole organisms to organs, cells and cell organelles, using the methods of mechanics. Biomechanics is a branch of biophysics.</p>
+                            <p className="text-slate-400 mt-4">{marketItem.description}</p>
+                           {/*<p className="text-slate-400 mt-4">What does it mean? Biomechanics is the study of the structure, function and motion of the mechanical aspects of biological systems, at any level from whole organisms to organs, cells and cell organelles, using the methods of mechanics. Biomechanics is a branch of biophysics.</p>*/}
 
                             <div className="mt-4">
                                 <span className="text-lg font-medium text-slate-400 block">Market Price</span>
-                                <span className="tmd:text-2xl text-xl font-semibold block mt-2"><i className="mdi mdi-ethereum"></i> 3.5 ETH = $ 4,659.75</span>
+                                {/*<span className="tmd:text-2xl text-xl font-semibold block mt-2"><i className="mdi mdi-ethereum"></i> 3.5 ETH = $ 4,659.75</span>*/}
+                                <span className="tmd:text-2xl text-xl font-semibold block mt-2"><i className="mdi mdi-ethereum"></i>{marketItem.etherPrice} {misc.currency}</span>
                             </div>
 
                             <div className="mt-6">
-                                <Link to="#" onClick={()=> setPlaceBid(!placeBid)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><i className="mdi mdi-gavel"></i> Bid Now</Link>
-                                <Link to="#" onClick={() => setBuyNow(!buyNow)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white ms-1"><i className="mdi mdi-lightning-bolt"></i> Buy Now</Link>
+                                {/*<Link to="#" onClick={()=> setPlaceBid(!placeBid)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><i className="mdi mdi-gavel"></i> Bid Now</Link>*/}
+                                <Link to="#" onClick={() => buyMarketItemHandler(marketItem.tokenId)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white ms-1"><i className="mdi mdi-lightning-bolt"></i> Buy Now</Link>
                             </div>
 
                             <div className="md:flex p-6 bg-gray-50 dark:bg-slate-800 rounded-lg shadow dark:shadow-gray-700 mt-6">
                                 <div className="md:w-1/2">
                                     <div className="flex items-center">
                                         <div className="relative inline-block">
-                                            <img src={creater?.avatar ? creater?.avatar : image1} className="h-16 rounded-md" alt="" />
+                                            <img src={creater?.avatar ? creater?.avatar : image} className="h-16 rounded-md" alt="" />
                                             <i className="mdi mdi-check-decagram text-emerald-600 text-lg absolute -top-2 -end-2"></i>
                                         </div>
 
@@ -93,7 +152,7 @@ export default function ItemDetail() {
                                 <div className="md:w-1/2 md:mt-0 mt-4">
                                     <div className="flex items-center">
                                         <div className="relative inline-block">
-                                            <img src={creater?.avatar ? creater?.avatar : image1} className="h-16 rounded-md" alt="" />
+                                            <img src={creater?.avatar ? creater?.avatar : image} className="h-16 rounded-md" alt="" />
                                             <i className="mdi mdi-check-decagram text-emerald-600 text-lg absolute -top-2 -end-2"></i>
                                         </div>
 
@@ -105,7 +164,7 @@ export default function ItemDetail() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 mt-8">
+                            {/*<div className="grid grid-cols-1 mt-8">
                                 <ul className="md:w-fit w-full flex-wrap justify-center text-center p-3 bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 rounded-md" id="myTab" data-tabs-toggle="#StarterContent" role="tablist">
                                     <li role="presentation" className="md:inline-block block md:w-fit w-full">
                                         <button className={`px-6 py-2 font-semibold rounded-md w-full transition-all duration-500 ease-in-out ${activeIndex === 0 ? 'text-white bg-violet-600' : ''}`} id="wednesday-tab" data-tabs-target="#wednesday" type="button" role="tab" aria-controls="wednesday" aria-selected="true"
@@ -184,9 +243,9 @@ export default function ItemDetail() {
 
 
                                 </div>
-                            </div>
+                            </div>*/}
                         </div>
-                    </div>
+                    </div> )}
                 </div>
                 <div className={`fixed z-50 overflow-hidden inset-0 m-auto justify-center items-center flex bg-gray-900 bg-opacity-50 dark:bg-opacity-80 ${placeBid ? "" : "hidden" }`}>
                 <div className="relative w-full h-auto max-w-md p-4">

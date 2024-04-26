@@ -1,37 +1,58 @@
-import React, { useEffect, useState } from 'react'
-import image from '../../assets/images/avatar/1.jpg';
+import React, { useEffect, useState, useContext, useRef } from 'react'
+//import image from '../../assets/images/avatar/1.jpg';
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
+import urls from '../../constants/urls';
 import {AiOutlineDashboard, PiBrowsers, AiOutlineSetting, IoMdLogOut} from "../../assets/icons/vander"
 import FormData from "form-data";
 import axios from "axios";
+//import { useAuthCore } from '@particle-network/auth-core-modal';
+import UserContext from '../../contexts/UserContext';
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
 
 export default function UploadWork() 
 {
-
-    const { createMarketItem, connectWallet, getAccounts } = useNFTMarketplace();
-    const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-    //const [transactionFees, setTransactionFees] = useState(null);
-
+    const { createMarketItem, getAccounts } = useNFTMarketplace();
     const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
+    const [imageSrc, setImageSrc] = useState(null);
 	const [imageURI, setImageURI] = useState("");
     const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    //const { userInfo } = useAuthCore();
+    const { userData, getUserAvatar } = useContext(UserContext);
+    const initialized = useRef(false);
 
-    const createNFTForm = async (event) => {
+    const createNFTForm = async (event) => 
+    {
+        setSuccessMessage('');
         event.preventDefault();
-		if (imageURI === "") {
+		if (imageURI === "") 
+        {
 			alert("Please upload an image");
 			return false;
-		} else if (title === "") {
+		} 
+        else if (title === "") 
+        {
 			alert("Please add a title");
 			return false;
 		}
-        //openTransactionDialog();
-        await mintNFT();
+        setSubmitting(true);
+        setLoading(true);
+        const created = await mintNFT();
+        setSubmitting(false);
+        setLoading(false);
+        if (created)
+        {
+            setSuccessMessage(`NFT created successfully, go to <a href="${urls.user_nfts}" style="color: blue;">my nft page</a> to view it.`);
+        }
+        else
+        {
+            setSuccessMessage('Failed to create NFT.');
+        }
         return true;
     }
 
@@ -45,7 +66,7 @@ export default function UploadWork()
                 description: description,
                 image: imageURI
             };
-            console.log("jsonData",jsonData);
+            //console.log("jsonData",jsonData);
             let res = await axios.post(process.env.REACT_APP_IPFS_JSON_URL, jsonData, 
             {
                 auth: 
@@ -56,7 +77,7 @@ export default function UploadWork()
             });
             const tokenURI = res.data.fastUrl;
             const accounts = await getAccounts();
-           return await createMarketItem(tokenURI, 1000, accounts[0]);
+            return await createMarketItem(tokenURI, 0);
         }
         catch (error) 
         {
@@ -67,7 +88,13 @@ export default function UploadWork()
     useEffect(() => 
     {
         document.documentElement.classList.add('dark');
-    });
+        if (/*userInfo &&*/ !initialized.current) 
+        {
+            initialized.current = true;
+            const avatar = getUserAvatar(userData);
+            setImageSrc(avatar); 
+        }
+    }, [getUserAvatar, userData]);
 
     const handleChange = async () => 
     {
@@ -148,7 +175,7 @@ export default function UploadWork()
                                 <div className="py-10 bg-[url('../../assets/images/blog/05.jpg')] bg-center bg-no-repeat"></div>
 
                                 <div className="relative text-center -mt-10 p-6 pt-0">
-                                    <img src={image} className="bg-white dark:bg-slate-900 h-20 w-20 rounded-full shadow-md dark:shadow-gray-800 mx-auto p-1" alt="" />
+                                    <img src={imageSrc} className="bg-white dark:bg-slate-900 h-20 w-20 rounded-full shadow-md dark:shadow-gray-800 mx-auto p-1" alt="" />
 
                                     <div className="mt-3">
                                         <Link to="/creator-profile" className="font-semibold block hover:text-violet-600">Steven Townsend</Link>
@@ -177,12 +204,12 @@ export default function UploadWork()
                                             </Link>
                                         </li>
 
-                                        <li className="navbar-item account-menu text-[16px]">
+                                        {/*<li className="navbar-item account-menu text-[16px]">
                                             <Link to="/lock-screen" className="navbar-link text-slate-400 flex items-center py-2 rounded">
                                                 <span className="me-2 mb-0"><IoMdLogOut /></span>
                                                 <h6 className="mb-0 font-medium">Logout</h6>
                                             </Link>
-                                        </li>
+                                        </li>*/}
                                     </ul>
                                 </div>
                             </div>
@@ -210,7 +237,7 @@ export default function UploadWork()
                                                 <textarea name="comments" id="comments" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Description :" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
                                             </div>
 
-                                            <div className="md:col-span-6 col-span-12">
+                                            {/*<div className="md:col-span-6 col-span-12">
                                                 <label className="font-semibold">Type :</label>
                                                 <select className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2">
                                                     <option>GIFs</option>
@@ -237,10 +264,13 @@ export default function UploadWork()
                                             <div className="md:col-span-6 col-span-12">
                                                 <label className="font-semibold"> Expiration date : </label>
                                                 <input name="date" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2 end" placeholder="Select date :" />
-                                            </div>
+                                            </div>*/}
 
                                             <div className="col-span-12">
-                                                <button type="submit" onClick={createNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>Create Item</button>
+                                                <button type="submit" onClick={createNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>{submitting ? 'Submitting...' : 'Create Item'}</button>
+                                                {successMessage && (
+                                                    <div dangerouslySetInnerHTML={{ __html: successMessage }} />
+                                                )}
                                             </div>
                                         </div>
                                     </form>

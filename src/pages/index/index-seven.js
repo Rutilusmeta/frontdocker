@@ -58,7 +58,7 @@ export default function IndexSeven() {
                                     <p className="text-white/70 text-lg max-w-xl mx-auto">"We are a martketplace focussed on the Queer community. We shine the spotlight on Queer creators in a safe space!</p>
 
                                     <div className="mt-8">
-                                        <Link to="/explore-one" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full">Explore now</Link>
+                                        <a href="#market-items-grid" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full">Explore now</a>
                                     </div>
                                 </div>
                             </div>
@@ -68,7 +68,7 @@ export default function IndexSeven() {
             </section>
 
             <section className="relative md:pb-24 pb-16 -mt-16">
-                <div className="container z-1">
+                {/*<div className="container z-1">
                     <div className="grid grid-cols-1">
                         <form className="p-6 bg-white dark:bg-slate-900 rounded-xl shadow dark:shadow-gray-700">
                             <div className="registration-form text-dark text-start">
@@ -110,12 +110,12 @@ export default function IndexSeven() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>*/}
                 <Feature />
-                <CollectionTwo title="Top Collection" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!"/>
-                <ItemsGrid title="Market Listings" description="Testing the market listings" pagination={true} />
-                <AuctionsTwo title="Live Auctions" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!"/>
-                <CreatorTwo title="Live Auctions" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!" />
+                {/*<CollectionTwo title="Top Collection" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!"/>*/}
+                <ItemsGrid title="Market Listings" description="" />
+                {/* <AuctionsTwo title="Live Auctions" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!"/>*/}
+                {/*<CreatorTwo title="Live Auctions" description="We are a huge marketplace dedicated to connecting great artists of all Giglink with their fans and unique token collectors!" />*/}
             </section>
             <Footer />
             <Switcher />

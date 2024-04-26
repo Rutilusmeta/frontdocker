@@ -9,6 +9,8 @@ const NFTMarketplaceContext = createContext();
 
 export const useNFTMarketplace = () => useContext(NFTMarketplaceContext);
 
+const BigNumber = require('bignumber.js');
+
 export const NFTMarketplaceContextProvider = ({ children }) => 
 {
     let providerAddress;
@@ -29,53 +31,125 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
             break;
     }
-
-    const getMarketItems = async () => 
+ 
+    const getMarketItems = async () => // we need to add this logic on the contract
     {
         try 
         {
-            const web3 = new Web3(providerAddress); // Assuming Hardhat is running on port 8545 locally
-            //const web3 = new Web3(window.etherium);
+            const web3 = new Web3(providerAddress);
             const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
-            const records = await contract.methods.getMarketItems("0x0000000000000000000000000000000000000000").call();
-            console.log("NFTMarketContext::getMarketItems: ", records);
+            const records = await contract.methods.getActiveMarketItems().call();
+            const filteredRecords = records.filter(record => record.state === 0n);
+            //console.log("NFTMarketContext::getActiveMarketItems: ", filteredRecords);
+            return filteredRecords;
+        } 
+        catch (error) 
+        {
+            console.error(error);
+            return null;
+        }
+    };
+
+    const buyMarketItem = async (tokenId, price) => 
+    {
+        try 
+        {
+            const accounts = await connectWallet();
+            const web3 = new Web3(window.ethereum);
+            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const tx = await contract.methods.purchaseMarketItem(tokenId).send
+            ({
+                from: accounts[0],
+                value: web3.utils.toWei(price.toString(), 'ether') // Convert price to Wei
+            });
+            //console.log("buyMarketItem:purchaseketItem", tx);
+            return tx;
+        }
+        catch (error) 
+        {
+            console.error(error);
+            return null;
+        }
+    }
+    
+    const getMarketItem = async (tokenId) => 
+    {
+        try 
+        {
+            const web3 = new Web3(providerAddress);
+            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const record = await contract.methods.getActiveMarketItem(tokenId).call();
+            //console.log("NFTMarketContext::getActiveMarketItems: ", tokenId, record);
+            return record;
+        }
+        catch (error) 
+        {
+            console.error(error);
+            return null;
+        }
+     };
+    const getUserMarketItems = async () => 
+    {
+        try 
+        {
+            const accounts = await connectWallet();
+            const web3 = new Web3(window.ethereum);
+            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const records = await contract.methods.getMarketItemsBySeller(accounts[0]).call();
+            //console.log("NFTMarketContext::getMarketItemsBySeller: ", records);
             return records;
         } 
         catch (error) 
         {
             console.error(error);
+            return null;
         }
     };
 
-    const createMarketItem = async (tokenURI, price, collectionAddress) => 
+    const formatPrice = (price) =>
+    {
+        const etherPerWei = new BigNumber(10).pow(18); // 1 Ether = 10^18 Wei
+        const priceInEther = new BigNumber(price).div(etherPerWei);
+        return priceInEther.toString();
+    }
+
+    const changeItemStateAndPrice = async (tokenId, price, state) => 
     {
         try 
         {
             const accounts = await connectWallet();
-            // Perform validations
-            if (price <= 0) 
+            if (price <= 0 && state === 0n) 
             {
                 throw new Error("Price must be greater than 0");
             }
-            const web3 = new Web3(providerAddress);
+            const web3 = new Web3(window.ethereum);
             const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
-            const transaction = await contract.methods.createToken(tokenURI, price, collectionAddress);
-            //const fees = await estimateTransactionFees(transaction);
-            //console.log("Transaction fees", fees);
-            //const estimatedGas = await transaction.estimateGas({ from: account });
-            //console.log("EStimated Gas:", estimatedGas);
-            //const gasPrice = await web3.eth.getGasPrice();
-            //const transactionFees = web3.utils.toBigInt(estimatedGas) * web3.utils.toBigInt(gasPrice);
-            //console.log(transactionFees);
-            //const recepit = await transaction.send({ from: account, gas: estimatedGas });
-            //console.log("Market item created successfully: ", recepit);
-            //return recepit;
-            
+            const priceInWei = web3.utils.toWei(price.toString(), "ether");
+            const transaction = await contract.methods.changeItemStateAndPrice(tokenId, priceInWei, state).send({ from: accounts[0] });
+            //console.log("changeItemStateAndPrice: ", tokenId, price, state, transaction);
+            return transaction;
         } 
         catch (error) 
         {
             console.error("Error creating market item:", error);
-            return false;
+            return null;
+        }
+    }
+    const createMarketItem = async (tokenURI, price) => 
+    {
+        try 
+        {
+            const accounts = await connectWallet();
+            const web3 = new Web3(window.ethereum);
+            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const transaction = await contract.methods.createToken(tokenURI, price).send({ from: accounts[0] });
+            //console.log("Market item created successfully: ", transaction);
+            return transaction;
+        } 
+        catch (error) 
+        {
+            console.error("Error creating market item:", error);
+            return null;
         }
     };
 
@@ -98,7 +172,11 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
                         symbol: 'ETH',
                         decimals: 18,
                     },
-                    rpcUrls: [process.env.REACT_APP_CHAIN_ADDRESS_DEV.replace('ws://', 'http://')],
+                    rpcUrls: 
+                    [
+                        process.env.REACT_APP_CHAIN_ADDRESS_DEV.
+                            replace('ws://', 'http://').replace('wss://', 'https://')
+                    ],
                     //blockExplorerUrls: ['https://custom-block-explorer-url.com']
                 };
                 const result = await window.ethereum.request({
@@ -121,13 +199,11 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         }
         return await window.ethereum.request({ method: 'eth_requestAccounts' });
     }
-    const getAccounts = async () => {
+    const getAccounts = async () => 
+    {
         try 
         {
             const accounts = await connectWallet();
-            //const web3 = new Web3(window.ethereum);
-            //const accounts = await web3.eth.getAccounts();
-            //console.log("Accounts", accounts);
             return accounts;
         } 
         catch (error) 
@@ -142,7 +218,6 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         try 
         {
             const accounts = await connectWallet();
-            //const web3 = new Web3(providerAddress);
             const web3 = new Web3(window.ethereum);
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             const balance = await web3.eth.getBalance(address);
@@ -159,59 +234,9 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         }
     }
 
-    const estimateTransactionFees = async (transaction, data) => {
-        try {
-            //const web3 = new Web3(providerAddress);
-            const web3 = new Web3(window.etherium);
-            // Estimate gas for the transaction
-           // const estimatedGas = await transaction.estimateGas({ from: account });
-            //onsole.log("Estimated Gas:", estimatedGas);
-            // Get current gas price
-            //const gasPrice = await web3.eth.getGasPrice();
-            // Calculate transaction fees
-            //const transactionFees = web3.utils.toBigInt(estimatedGas) * web3.utils.toBigInt(gasPrice);
-            //const fees = web3.utils.fromWei(transactionFees, 'ether')
-           // console.log("Transaction Fees:", fees, "ETH");
-            //return fees;
-        } catch (error) {
-            console.error(error);
-            return null;
-        }
-    }
-    const getTransactionFees = async () => {
-        try {
-            //const web3 = new Web3(providerAddress);
-            const web3 = new Web3(window.etherium);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
-            
-            // Estimate gas for the transaction
-            //const estimatedGas = await contract.methods.createToken().estimateGas({ from: account , data:{a:"bbb"}});
-            //console.log("Estimated Gas:", estimatedGas);
-            // Get current gas price
-           // const gasPrice = await web3.eth.getGasPrice();
-            //console.log("Gas Price:", gasPrice);
-            // Calculate transaction fees
-            //const transactionFees = web3.utils.toBigInt(estimatedGas) * web3.utils.toBigInt(gasPrice);
-           // const fees = web3.utils.fromWei(transactionFees, 'ether')
-           // console.log("Transaction Fees:", fees, "ETH");
-           // return fees;
-           return 1000;
-            // Proceed with sending the transaction
-            //const txReceipt = await contract.methods.increment().send({ from: account });
-    
-            //console.log("Transaction Hash:", txReceipt.transactionHash);
-           // console.log("Data incremented successfully");
-    
-            // Fetch updated data after the transaction
-            //await fetchData();
-        } catch (error) {
-            console.error(error);
-            return null;
-        }
-    };
-
     return (
-        <NFTMarketplaceContext.Provider value={{ getMarketItems, getTransactionFees, createMarketItem, getBalance, getAccounts, connectWallet }}>
+        <NFTMarketplaceContext.Provider value={{ formatPrice, buyMarketItem, getMarketItem, getMarketItems, 
+            changeItemStateAndPrice, getUserMarketItems, createMarketItem, getBalance, getAccounts, connectWallet }}>
             {children}
         </NFTMarketplaceContext.Provider>
     );
