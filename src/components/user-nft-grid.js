@@ -71,7 +71,7 @@ export default function UserNftGrid(props)
                 }
             }
             //console.log(tokenID, price, state);
-            await changeItemStateAndPrice(tokenID, price, state);
+            await changeItemStateAndPrice(tokenID, price, state, userInfo);
             updateItemStateAndPriceAtIndex(itemIndex, price, state);
             setDialogOpen(false);
             setLoading(false);

@@ -67,9 +67,11 @@ function App()
       <UserProvider>
         <NFTMarketplaceContextProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/index-seven" replace />} />
+            {/*<Route path="/" element={<Navigate to="/index-seven" replace />} />*/}
 
-            <Route path="/index" element={<Index />} />
+            <Route path={urls.home} element={<IndexSeven />} />
+
+             {/*<Route path="/index" element={<Index />} />
             <Route path="/index-seven" element={<IndexSeven />} />
             <Route path="/index-two" element={<IndexTwo />} />
             <Route path="/index-three" element={<IndexThree />} />
@@ -83,44 +85,44 @@ function App()
             <Route path='/wallet' element={<Wallet />} />
             <Route path="/explore-two" element={<ExploreTwo />} />
             <Route path="/explore-three" element={<ExploreThree />} />
-            <Route path="/index-four" element={<IndexFour />} />
+            <Route path="/index-four" element={<IndexFour />} />*/}
             <Route exact path={urls.upload_work} element={<ProtectedRoute/>}>
               <Route exact path={urls.upload_work} element={<UploadWork/>}/>
             </Route>
-            <Route path="/index-six" element={<IndexSix />} />
-            <Route path="/index-five" element={<IndexFive />} />
+           {/*<Route path="/index-six" element={<IndexSix />} />
+            <Route path="/index-five" element={<IndexFive />} />*/}
 
             {/*<Route path={urls.item_detail} element={<ItemDetail />} />*/}
             <Route path={urls.item_detail_id} element={<ItemDetail />} />
-            <Route path='/helpcenter-guides' element={<Guides />} />
+            {/*<Route path='/helpcenter-guides' element={<Guides />} />
             <Route path='/helpcenter-support' element={<Support />} />
             <Route path='/helpcenter-support' element={<Support />} />
-            <Route path='/helpcenter-faqs' element={<HelpcenterFaqs />} />
-            <Route path='/privacy' element={<PrivacyPolicy />} />
-            <Route path='/terms' element={<Terms />} />
-            <Route path='/comingsoon' element={<Comingsoon />} />
-            <Route path='/maintenance' element={<Maintenance />} />
-            <Route path='/error' element={<Error />} />
-            <Route path='/thankyou' element={<Thankyou />} />
+            <Route path='/helpcenter-faqs' element={<HelpcenterFaqs />} />*/}
+            <Route path={urls.privacy} element={<PrivacyPolicy />} />
+            <Route path={urls.terms} element={<Terms />} />
+            <Route path={urls.coming_soon} element={<Comingsoon />} />
+            <Route path={urls.maintenance} element={<Maintenance />} />
+            <Route path={urls.error} element={<Error />} />
+            <Route path={urls.thankyou} element={<Thankyou />} />
 
-            <Route path='/login' element={<Login />} />
+             {/*<Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />
             <Route path='/reset-password' element={<ResetPassword />} />
             <Route path='/lock-screen' element={<LockScreen />} />
-            <Route path='/helpcenter-overview' element={<HelpcenterOverview />} />
+            <Route path='/helpcenter-overview' element={<HelpcenterOverview />} />*/}
 
-            <Route path='/blogs' element={<Blogs />} />
+            {/*<Route path='/blogs' element={<Blogs />} />
             <Route path='/blog-detail' element={<BlogDetail />} />
-            <Route path='/blog-detail/:id' element={<BlogDetail />} />
+            <Route path='/blog-detail/:id' element={<BlogDetail />} />*/}
 
-            <Route path='/become-creator' element={<BecomeCreator />} />
-            <Route path='/creator-profile' element={<CreatorProfile />} />
-            <Route path='/creator-profile/:id' element={<CreatorProfile />} />
+            <Route path={urls.become_creator} element={<BecomeCreator />} />
+            {/*<Route path={urls.creator_profile} element={<CreatorProfile />} />*/}
+            <Route path={urls.creator_profile_id} element={<CreatorProfile />} />
             <Route exact path={urls.creator_profile_edit} element={<ProtectedRoute/>}>
               <Route exact path={urls.creator_profile_edit} element={<CreatorProfileEdit/>}/>
             </Route>
             <Route exact path={urls.user_nfts} element={<ListNFT/>}/>
-            <Route path='/creators' element={<Creators />} />
+            <Route path={urls.creators} element={<Creators />} />
             <Route path={urls.aboutus} element={<About />} />
             <Route path={urls.contact} element={<Contact />} />
             <Route path="*" element={<NotFound />} />

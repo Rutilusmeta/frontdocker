@@ -46,7 +46,7 @@ export default function Footer() {
 
                                 </div>
 
-                                <div className="lg:col-span-2 md:col-span-4">
+                                {/*<div className="lg:col-span-2 md:col-span-4">
                                     <h5 className="tracking-[1px] text-lg text-gray-100 font-semibold"> Marketplace </h5>
                                     <ul className="list-none footer-list mt-6">
                                         <li><Link to="/explore-one" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Explore Item</Link></li>
@@ -55,16 +55,16 @@ export default function Footer() {
                                         <li className="mt-[10px]"><Link to="/wallet" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Wallets</Link></li>
                                         <li className="mt-[10px]"><Link to="/creators" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Creators</Link></li>
                                     </ul>
-                                </div>
+                            </div>*/}
 
                                 <div className="lg:col-span-3 md:col-span-4">
                                     <h5 className="tracking-[1px] text-lg text-gray-100 font-semibold">Usefull Links</h5>
                                     <ul className="list-none footer-list mt-6">
                                         <li><Link to="/aboutus" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> About Us</Link></li>
-                                        <li className="mt-[10px]"><Link to="/blogs" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Blog & News</Link></li>
+                                        {/*<li className="mt-[10px]"><Link to="/blogs" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Blog & News</Link></li>*/}
                                         <li className="mt-[10px]"><Link to="/terms" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Terms & Condition</Link></li>
                                         <li className="mt-[10px]"><Link to="/privacy" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Privacy policy</Link></li>
-                                        <li className="mt-[10px]"><Link to="/login" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Login</Link></li>
+                                        {/*<li className="mt-[10px]"><Link to="/login" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Login</Link></li>*/}
                                         <li className="mt-[10px]"><Link to="/contact" className="text-[16px] text-gray-300 hover:text-gray-400 duration-500 ease-in-out inline-flex items-center"><MdKeyboardArrowRight className="me-1 text-lg"/> Contact Us</Link></li>
                                     </ul>
                                 </div>

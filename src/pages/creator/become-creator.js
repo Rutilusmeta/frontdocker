@@ -4,11 +4,12 @@ import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
-import { useAuthCore } from '@particle-network/auth-core-modal';
+import { useAuthCore, useConnect } from '@particle-network/auth-core-modal';
 
 export default function BecomeCreator() {
 
     const { userInfo } = useAuthCore();
+    const { connect } = useConnect();
 
     const handleChange = () => 
     {
@@ -19,6 +20,28 @@ export default function BecomeCreator() {
             readFile(uploadedFile);
         }
     }
+
+    const handleLogin = async () => 
+    {
+        try 
+        {
+            if (!userInfo) 
+            {
+                await connect({});
+            }
+        } 
+        catch (error) 
+        {
+            if (error.code === 4011) 
+            {
+                console.log("User canceled the operation");
+            } 
+            else 
+            {
+                console.error("Error:", error);
+            }
+        }
+    };
 
     const readFile = (uploadedFile) => {
         if (uploadedFile) {
@@ -57,16 +80,20 @@ export default function BecomeCreator() {
                             <h3 className="md:text-5xl text-3xl md:leading-snug tracking-wide leading-snug font-semibold mt-2">Start Your <br /> <span className="bg-gradient-to-r from-red-600 to-violet-600 text-transparent bg-clip-text">Journey</span></h3>
 
                             <p className="text-slate-400 mt-4 text-lg">We are a huge marketplace dedicated to connecting great artists of all giglink with their fans and unique token collectors!</p>
+                        
+                            <p className="text-slate-400 mt-4 text-lg">
+                                <button id="submit" name="send" onClick={() => handleLogin()} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full justify-center flex items-center">Create your account</button>         
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="absolute text-center z-10 bottom-5 start-0 end-0 mx-3">
+                {/*<div className="absolute text-center z-10 bottom-5 start-0 end-0 mx-3">
                     <ul className="breadcrumb tracking-[0.5px] mb-0 inline-block">
                         <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out hover:text-violet-600"><Link to="/index">Giglink</Link></li>
                         <li className="inline breadcrumb-item text-[15px] font-semibold duration-500 ease-in-out text-violet-600" aria-current="page">Become Creator</li>
                     </ul>
-                </div>
+                </div>*/}
             </section>
             <div className="relative">
                 <div className="shape absolute start-0 end-0 sm:-bottom-px -bottom-[2px] overflow-hidden z-1 text-white dark:text-slate-900">
@@ -75,13 +102,14 @@ export default function BecomeCreator() {
                     </svg>
                 </div>
             </div>
+            
 
             <section className="relative md:py-24 py-16">
                 <div className="container">
                     <div className="md:flex justify-center">
                         <div className="lg:w-3/4">
                             <div className="lg:flex justify-center p-6 bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-800">
-                                <div className="lg:w-1/3 md:w-full">
+                               {/* <div className="lg:w-1/3 md:w-full">
                                     <p className="font-semibold mb-6">Upload your ART here, Please click "Upload Image" Button.</p>
                                     <div className="preview-box flex justify-center rounded-md shadow dark:shadow-gray-800 overflow-hidden bg-gray-50 dark:bg-slate-800 text-slate-400 p-2 text-center small">Supports JPG, PNG and MP4 videos. Max file size : 10MB.</div>
                                     <input type="file" id="input-file" name="input-file" accept="image/*" hidden onChange={() => handleChange()} />
@@ -115,7 +143,7 @@ export default function BecomeCreator() {
                                             <button id="submit" name="send" className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full justify-center flex items-center">Create your account</button>
                                         </div>
                                     </form>
-                                </div>
+                                </div>*/}
                             </div>
                         </div>
                     </div>

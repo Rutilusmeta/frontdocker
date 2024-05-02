@@ -2,6 +2,7 @@
 //import { useContext } from 'react'
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthCore } from '@particle-network/auth-core-modal';
+import urls from '../constants/urls';
 //import UserContext from '../contexts/UserContext';
 
 // Define the ProtectedRoute component
@@ -16,5 +17,5 @@ export const ProtectedRoute = () =>
         console.log("Redirecting to login");
         //return <Navigate to="/login" replace />;
     }*/
-    return isAuthenticated ? <Outlet /> : <Navigate to="/index-seven" />;
+    return isAuthenticated ? <Outlet /> : <Navigate to={urls.home} />;
 }

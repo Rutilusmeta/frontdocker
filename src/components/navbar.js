@@ -162,11 +162,6 @@ export default function Navbar()
         window.location.reload();
     };
 
-    /*if (userInfo) {
-        console.log(userInfo);
-        console.log("AJA");
-    }*/
-
     window.addEventListener("scroll", windowScroll);
     function windowScroll() {
         const navbar = document.getElementById("topnav");
@@ -427,8 +422,8 @@ export default function Navbar()
 
                     <div id="navigation" className={`${isOpen === true ? 'hidden' : 'block'}`}>
                         <ul className="navigation-menu justify-end">
-                            <li><Link to="/index-seven" className="sub-menu-item">Home</Link></li>
-                            <li className="has-submenu parent-parent-menu-item">
+                            <li><Link to={urls.home} className="sub-menu-item">Home</Link></li>
+                            {/*<li className="has-submenu parent-parent-menu-item">
                                 <Link to="#">Explore</Link><span className="menu-arrow"></span>
                                 <ul className="submenu">
                                     <li><Link to="/explore-one" className="sub-menu-item"> Explore One</Link></li>
@@ -438,7 +433,7 @@ export default function Navbar()
                                     <li><Link to="/item-detail" className="sub-menu-item"> Item Detail</Link></li>
                                     <li><Link to="/activity" className="sub-menu-item"> Activities</Link></li>
                                     <li><Link to="/collections" className="sub-menu-item">Collections</Link></li>
-                                    {/*<li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>*/}
+                                    <li><Link to="/upload-work" className="sub-menu-item">Upload Works</Link></li>
                                 </ul>
                             </li>
                             <li className="has-submenu parent-parent-menu-item">
@@ -485,7 +480,7 @@ export default function Navbar()
                                     <li><Link to={urls.terms} className="sub-menu-item">Terms Policy</Link></li>
                                     <li><Link to={urls.upload_work} className="sub-menu-item">Privacy Policy</Link></li>
                                 </ul>
-                            </li>
+                            </li>*/}
                             {userInfo ? (
                                 <li><Link to={urls.upload_work} className="sub-menu-item">Upload Works</Link></li>
                             ) : (

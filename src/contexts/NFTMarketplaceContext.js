@@ -2,6 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import Web3 from 'web3';
 import NFTMarketplacArtifactJson from '../contracts/abi/contracts/NFTMarketplace.sol/NFTMarketplace.json';
+import axios from 'axios';
 
 const ABI = NFTMarketplacArtifactJson.abi;
 
@@ -113,7 +114,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         return priceInEther.toString();
     }
 
-    const changeItemStateAndPrice = async (tokenId, price, state) => 
+    const changeItemStateAndPrice = async (tokenId, price, state, userInfo) => 
     {
         try 
         {
@@ -127,6 +128,16 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             const priceInWei = web3.utils.toWei(price.toString(), "ether");
             const transaction = await contract.methods.changeItemStateAndPrice(tokenId, priceInWei, state).send({ from: accounts[0] });
             //console.log("changeItemStateAndPrice: ", tokenId, price, state, transaction);
+            if (state === 0n)
+            {
+                const headers = 
+                {
+                    'Authorization': userInfo.token,
+                    'UUID': userInfo.uuid
+                };
+                let res = await axios.post(process.env.REACT_APP_API_ADDRESS + '/listing/', { nft_id: parseInt(tokenId) }, { headers: headers });
+                console.log(res);
+            }
             return transaction;
         } 
         catch (error) 
