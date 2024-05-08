@@ -9,7 +9,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 contract NFTMarketplace is OwnableUpgradeable, ReentrancyGuardUpgradeable, ERC721URIStorageUpgradeable 
 {
     uint256 private _tokenIds;
-    //uint256 public listingPrice; // backward compatibility with NFTMarketplace
 
     enum State { Active, Inactive }
 

@@ -12,23 +12,7 @@ export const UserProvider = ({ children }) =>
     const [loading, setLoading] = useState(true); // Add loading state
     const isMounted = useRef(false);
 
-    let providerAddress;
-
-    switch (process.env.REACT_APP_CURRENT_ENV) {
-        case 'dev':
-            providerAddress = process.env.REACT_APP_API_ADDRESS_DEV;
-            break;
-        case 'testing':
-            providerAddress = process.env.REACT_APP_API_ADDRESS_TESTING;
-            break;
-        case 'prod':
-            providerAddress = process.env.REACT_APP_API_ADDRESS_PROD;
-            break;
-        default:
-            // Default to dev environment if REACT_APP_NETWORK is not set or unrecognized
-            providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
-            break;
-    }
+    const providerAddress = process.env.REACT_APP_API_ADDRESS;
 
     const updateUser = (newUserData) => 
     {
@@ -57,6 +41,33 @@ export const UserProvider = ({ children }) =>
         else
         {
             return `/avatar/1.jpg`;
+        }
+    }
+
+    const getUserDetails = async (sid) => {
+        try {
+            const url = providerAddress + '/user/details/' + sid;
+            const resp = await axios.get(url);
+            if (resp.status === 200 && resp.data.result.success === true) {
+                const result = resp.data.result.data;
+                result['addresses'] = {};
+                if (result.listings.length > 0) {
+                    result['addresses'] = []; // Initialize as an array if not already
+                    result.listings.forEach(listing => {
+                        const address = listing.address;
+                        if (address && !result['addresses'].includes(address)) {
+                            result['addresses'].push(address);
+                        }
+                    });
+                }
+                return result;
+            }
+            return null;
+        }
+        catch (error)
+        {
+            console.error('Error:', error);
+            return null;
         }
     }
 
@@ -147,7 +158,7 @@ export const UserProvider = ({ children }) =>
     }, [userData, userInfo]);
 
     return (
-        <UserContext.Provider value={{ userData, updateUser, clearUser, checkUserData, saveUserData, getUserAvatar }}>
+        <UserContext.Provider value={{ userData, updateUser, clearUser, checkUserData, getUserDetails, saveUserData, getUserAvatar }}>
             {!loading && children}
         </UserContext.Provider>
     );

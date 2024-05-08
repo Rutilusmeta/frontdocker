@@ -89,15 +89,20 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             return null;
         }
      };
-    const getUserMarketItems = async () => 
+    const getUserMarketItems = async (address = null, state = null) => 
     {
         try 
         {
-            const accounts = await connectWallet();
+            const accounts = (address) ? [address] : await connectWallet();
             const web3 = new Web3(window.ethereum);
             const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
             const records = await contract.methods.getMarketItemsBySeller(accounts[0]).call();
             //console.log("NFTMarketContext::getMarketItemsBySeller: ", records);
+            if (state !== null)
+            {
+                const filteredRecords = records.filter(record => record.state === state);
+                return filteredRecords;
+            }
             return records;
         } 
         catch (error) 
@@ -135,7 +140,12 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
                     'Authorization': userInfo.token,
                     'UUID': userInfo.uuid
                 };
-                let res = await axios.post(process.env.REACT_APP_API_ADDRESS + '/listing/', { nft_id: parseInt(tokenId) }, { headers: headers });
+                const data =
+                {
+                    nft_id: parseInt(tokenId),
+                    address: accounts[0],
+                }
+                let res = await axios.post(process.env.REACT_APP_API_ADDRESS + '/listing/', data, { headers: headers });
                 console.log(res);
             }
             return transaction;
@@ -185,12 +195,12 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
                     },
                     rpcUrls: 
                     [
-                        process.env.REACT_APP_CHAIN_ADDRESS_DEV.
-                            replace('ws://', 'http://').replace('wss://', 'https://')
+                        process.env.REACT_APP_CHAIN_ADDRESS_DEV
+                            .replace('ws://', 'http://').replace('wss://', 'https://')
                     ],
                     //blockExplorerUrls: ['https://custom-block-explorer-url.com']
                 };
-                const result = await window.ethereum.request({
+                await window.ethereum.request({
                     method: "wallet_addEthereumChain",
                     params: [customNetwork]
                 });
@@ -228,7 +238,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
     {
         try 
         {
-            const accounts = await connectWallet();
+            await connectWallet();
             const web3 = new Web3(window.ethereum);
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             const balance = await web3.eth.getBalance(address);

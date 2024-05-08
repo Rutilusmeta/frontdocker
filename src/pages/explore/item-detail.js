@@ -1,11 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import image from '../../assets/images/items/3.gif';
-/*import image1 from '../../assets/images/avatar/1.jpg';
-import image3 from '../../assets/images/items/2.gif';
-import image4 from '../../assets/images/items/1.jpg';
-import image5 from '../../assets/images/items/2.jpg';
-import image6 from '../../assets/images/items/1.gif';*/
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
@@ -14,7 +9,7 @@ import {IoMdClose,BsExclamationOctagon} from "../../assets/icons/vander"
 import misc from "../../constants/misc";
 import urls from '../../constants/urls';
 import axios from 'axios'; // Import axios for HTTP requests
-import UserContext from '../../contexts/UserContext';
+//import UserContext from '../../contexts/UserContext';
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
 
 export default function ItemDetail() 
@@ -24,8 +19,10 @@ export default function ItemDetail()
     const creater = data.find((creatorr) => creatorr.id === parseInt (id));
 
     const [activeIndex, setIndex] = useState(0);
-    const [placeBid , setPlaceBid] = useState(false)
-    const [ buyNow, setBuyNow] =  useState(false)
+    const [placeBid , setPlaceBid] = useState(false);
+    const [userDetails, setUserDetails] = useState(null);
+    const [itemSoldMsg, setItemSoldMsg] = useState('');
+    const [buyNow, setBuyNow] =  useState(false);
     const { getMarketItem, formatPrice, buyMarketItem, connectWallet } = useNFTMarketplace();
     const initialized = useRef(false);
     const [marketItem, setMarketItem] = useState(false);
@@ -36,24 +33,36 @@ export default function ItemDetail()
         if (/*userInfo &&*/ !initialized.current) 
         {
             initialized.current = true;
-            console.log(params);
             getMarketItem(id)
                 .then(item => {
-                    console.log(item);
                     return axios.get(item.tokenURI)
                         .then(response => {
                             const { name, description, image } = response.data;
-                            const avatar = image;
                             const etherPrice = formatPrice(item.price);
                             const updatedItem = {
                                 ...item,
                                 name,
                                 description,
                                 image,
-                                avatar,
                                 etherPrice
                             };
+                            //setMarketItem(updatedItem);
+                            return updatedItem;
+                        }).catch(error => {
+                            console.error('Error fetching market item:', error);
+                        });
+
+                }).then(updatedItem => {
+                    return axios.get(process.env.REACT_APP_API_ADDRESS + '/listing/' + updatedItem.tokenId)
+                        .then(response => {
+                            const { art_name, avatar, sid } = response.data.result.data;
+                            updatedItem.art_name = art_name;
+                            updatedItem.avatar = avatar;
+                            updatedItem.sid = sid;
+                            console.log(updatedItem);
                             setMarketItem(updatedItem);
+                        }).catch(error => {
+                            console.error('Error fetching additional data:', error);
                         });
                 })
                 .catch(error => {
@@ -64,17 +73,20 @@ export default function ItemDetail()
 
     const buyMarketItemHandler = async (tokenId) => 
     {
+        setItemSoldMsg('');
         const accounts = await connectWallet();
-        console.log(accounts[0],marketItem.owner);
-        if (marketItem.owner.toLowerCase() === accounts[0].toLowerCase())
+        if (marketItem.seller.toLowerCase() === accounts[0].toLowerCase())
         {
-            alert("You already own this item");
+            alert("You already alrady selling this item");
             return;
         }
         try
         {
-            //console.log("Buy now");
             const result = await buyMarketItem(tokenId, marketItem.etherPrice);
+            if (result)
+            {
+                setItemSoldMsg(`Congratulations, you can now go to <a href="${urls.user_nfts}" style="color: blue;">my nft page</a>.`);
+            }
         }
         catch (error) 
         {
@@ -132,24 +144,27 @@ export default function ItemDetail()
                             <div className="mt-6">
                                 {/*<Link to="#" onClick={()=> setPlaceBid(!placeBid)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><i className="mdi mdi-gavel"></i> Bid Now</Link>*/}
                                 <Link to="#" onClick={() => buyMarketItemHandler(marketItem.tokenId)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white ms-1"><i className="mdi mdi-lightning-bolt"></i> Buy Now</Link>
+                                {itemSoldMsg && (
+                                    <div dangerouslySetInnerHTML={{ __html: itemSoldMsg }} />
+                                )}
                             </div>
 
                             <div className="md:flex p-6 bg-gray-50 dark:bg-slate-800 rounded-lg shadow dark:shadow-gray-700 mt-6">
                                 <div className="md:w-1/2">
                                     <div className="flex items-center">
                                         <div className="relative inline-block">
-                                            <img src={creater?.avatar ? creater?.avatar : image} className="h-16 rounded-md" alt="" />
-                                            <i className="mdi mdi-check-decagram text-emerald-600 text-lg absolute -top-2 -end-2"></i>
+                                            <img src={marketItem.avatar} className="h-16 rounded-md" alt="" />
+                                            {/*<i className="mdi mdi-check-decagram text-emerald-600 text-lg absolute -top-2 -end-2"></i>*/}
                                         </div>
 
                                         <div className="ms-3">
-                                            <Link to="/creator-profile" className="font-semibold block hover:text-violet-600">{creater?.name ? creater?.name :"Michael Williams"}</Link>
-                                            <span className="text-slate-400 text-[16px] block mt-1">Creator</span>
+                                            <Link to={`/creator-profile/${marketItem.sid}`} className="font-semibold block hover:text-violet-600">{marketItem.art_name}</Link>
+                                            <span className="text-slate-400 text-[16px] block mt-1">Seller</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="md:w-1/2 md:mt-0 mt-4">
+                                {/*<div className="md:w-1/2 md:mt-0 mt-4">
                                     <div className="flex items-center">
                                         <div className="relative inline-block">
                                             <img src={creater?.avatar ? creater?.avatar : image} className="h-16 rounded-md" alt="" />
@@ -161,7 +176,7 @@ export default function ItemDetail()
                                             <span className="text-slate-400 text-[16px] block mt-1">Owner</span>
                                         </div>
                                     </div>
-                                </div>
+                                </div>*/}
                             </div>
 
                             {/*<div className="grid grid-cols-1 mt-8">

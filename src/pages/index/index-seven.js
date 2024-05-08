@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect } from 'react'
 import Navbar from '../../components/navbar'
-import Select from 'react-select'
-import CollectionTwo from '../../components/collection-two';
+//import Select from 'react-select'
+//import CollectionTwo from '../../components/collection-two';
 import ItemsGrid from '../../components/items-grid';
-import CreatorTwo from '../../components/creator-two';
+//import CreatorTwo from '../../components/creator-two';
 import Footer from '../../components/footer';
 import Feature from '../../components/feature';
-import AuctionsTwo from '../../components/auctions-two';
-import { Link } from 'react-router-dom';
+//import AuctionsTwo from '../../components/auctions-two';
+//import { Link } from 'react-router-dom';
 import Switcher from '../../components/switcher';
-import {LuClock, LuSearch,AiOutlineAppstore, AiOutlineStar} from "../../assets/icons/vander"
+//import {LuClock, LuSearch,AiOutlineAppstore, AiOutlineStar} from "../../assets/icons/vander"
 
 const options = [
     { value: 'Art', label: 'Art' },

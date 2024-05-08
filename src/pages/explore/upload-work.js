@@ -93,6 +93,7 @@ export default function UploadWork()
             initialized.current = true;
             const avatar = getUserAvatar(userData);
             setImageSrc(avatar); 
+            console.log(userData);
         }
     }, [getUserAvatar, userData]);
 
@@ -178,13 +179,13 @@ export default function UploadWork()
                                     <img src={imageSrc} className="bg-white dark:bg-slate-900 h-20 w-20 rounded-full shadow-md dark:shadow-gray-800 mx-auto p-1" alt="" />
 
                                     <div className="mt-3">
-                                        <Link to="/creator-profile" className="font-semibold block hover:text-violet-600">Steven Townsend</Link>
-                                        <span className="text-slate-400 text-sm block mt-1">@StreetBoy</span>
+                                        {/*<Link to="/creator-profile/{userData.sid}" className="font-semibold block hover:text-violet-600">{userData.art_name}</Link>*/}
+                                        <span className="text-slate-400 text-sm block mt-1">{userData.art_name}</span>
                                     </div>
 
                                     <ul className="list-none sidebar-nav mb-0 mt-3" id="navmenu-nav">
                                         <li className="navbar-item account-menu text-[16px]">
-                                            <Link to="/creator-profile" className="navbar-link text-slate-400 flex items-center py-2 rounded">
+                                            <Link to={`/creator-profile/${userData.sid}`} className="navbar-link text-slate-400 flex items-center py-2 rounded">
                                                 <span className="me-2 mb-0"><AiOutlineDashboard/></span>
                                                 <h6 className="mb-0 font-medium">Profile</h6>
                                             </Link>

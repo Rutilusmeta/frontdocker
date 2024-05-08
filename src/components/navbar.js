@@ -3,7 +3,6 @@ import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
 import urls from '../constants/urls'
-//import image from '../assets/images/client/05.jpg';
 import { Link } from "react-router-dom";
 import EnvDiv from './env-div';
 import { PiWalletBold/*, AiOutlineCopy*/, AiOutlineUser, LuSettings, LiaSignOutAltSolid } from "../assets/icons/vander"
@@ -15,11 +14,12 @@ export default function Navbar()
 {
     const { userData, checkUserData } = useContext(UserContext);
     const { getAccounts, getBalance } = useNFTMarketplace();
-    const [isDropdown, openDropdown] = useState(true);
-    const [isOpen, setMenu] = useState(true);
     const { connect, disconnect } = useConnect();
     const { userInfo } = useAuthCore();
+    const [isDropdown, openDropdown] = useState(true);
+    const [isOpen, setMenu] = useState(true);
     const [imageSrc, setImageSrc] = useState(null);
+    const [userID, setUserID] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
     const [addressBalance, setAddressBalance] = useState(0);
@@ -52,10 +52,10 @@ export default function Navbar()
         }
     };
 
-    const closeModal = () => 
+    /*const closeModal = () => 
     {
         setIsModalOpen(false);
-    };
+    };*/
 
     const activateMenu = useCallback(() => {
         var menuItems = document.getElementsByClassName("sub-menu-item");
@@ -114,22 +114,27 @@ export default function Navbar()
             //console.log("CHEKING NAVBAR", userData, userInfo);
             initialized.current = true;
             const result = checkUserData(userInfo);
-            if (userData && userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
-            {
-                setImageSrc(userData.avatar); 
-            }
-            else if (userData && userData.avatar)
-            {
-                setImageSrc(`/avatar/${userData.avatar}`); 
-            }
-            else
-            {
-                setImageSrc(`/avatar/1.jpg`); 
-            }
             if (!result)
             {
                 alert("Some error occured trying to login, please contact support!");
                 disconnect();
+            }
+            if (userData)
+            {
+                setUserID(userData.sid);
+                if (userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
+                {
+                    setImageSrc(userData.avatar); 
+                    
+                }
+                else if (userData.avatar)
+                {
+                    setImageSrc(`/avatar/${userData.avatar}`); 
+                }
+                else
+                {
+                    setImageSrc(`/avatar/1.jpg`); 
+                }
             }
         }
     }, [activateMenu, userInfo, checkUserData, userData, disconnect]);
@@ -406,7 +411,7 @@ export default function Navbar()
                                 {/*<ul className="py-2 text-start">*/}
                                 <ul className="mt-10 px-4">
                                     <li>
-                                        <Link to="/creator-profile" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
+                                        <Link to={`/creator-profile/${userID}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
                                     </li>
                                     <li>
                                         <Link to="/creator-profile-edit" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LuSettings className="text-[16px] align-middle me-1"/> Settings</Link>

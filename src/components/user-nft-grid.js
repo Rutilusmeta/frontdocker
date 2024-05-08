@@ -137,7 +137,7 @@ export default function UserNftGrid(props)
                 </div>
 
                 {marketItems.length === 0 ? (
-                    <p style={{ textAlign: 'center' }}>No data found</p>
+                    <p style={{ textAlign: 'center' }}>&nbsp;</p>
                 ) : (
                     <div className={`grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[30px] ${title !== undefined ? 'mt-12' : ''}`}>
                         {marketItems.map((item, index) => (

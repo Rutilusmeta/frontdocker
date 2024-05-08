@@ -1,66 +1,88 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom';
-import { data } from '../data/data';
-import image1 from '../assets/images/avatar/1.jpg';
-import {LuClock, MdKeyboardArrowLeft, MdKeyboardArrowRight} from '../assets/icons/vander'
+import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from '../assets/icons/vander'
 import misc from "../constants/misc";
 import urls from '../constants/urls';
 import axios from 'axios'; // Import axios for HTTP requests
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
 
 export default function ItemsGrid(props) {
-    //const { title, description,pagination, allData } = props;
 
-    const [gridData, setData] = useState(data);
-
-    const { title, description, pagination, allData } = props;
-    const [marketItems, setMarketItems] = useState([]); // State to hold fetched market items
-    const { getMarketItems, formatPrice } = useNFTMarketplace();
+    const { title, description, pagination, address, addresses} = props;
+    const [marketItems, setMarketItems] = useState([]);
+    const [noData, setNoData] = useState(false);
+    const { getMarketItems, getUserMarketItems, formatPrice } = useNFTMarketplace();
     const initialized = useRef(false);
 
-    useEffect(() => {
-        if (!initialized.current) {
+    useEffect(() => 
+    {
+        const fetchMarketItems = async (items) => 
+        {
+            setNoData(false);
+            try 
+            {
+                const updatedItems = await Promise.all(items.map(async (item) => 
+                {
+                    try 
+                    {
+                        const response = await axios.get(item.tokenURI);
+                        const { name, description, image } = response.data;
+                        const etherPrice = formatPrice(item.price);
+                        const user_data = await axios.get(process.env.REACT_APP_API_ADDRESS + '/listing/' + item.tokenId);
+                        const userInfo = user_data.data.result.data;
+                        return {
+                            ...item,
+                            name,
+                            description,
+                            image,
+                            etherPrice,
+                            userInfo
+                        };
+                    } catch (error) {
+                        console.error("Error fetching additional data:", error);
+                        return {
+                            ...item,
+                            name: "Error",
+                            description: "Error fetching data",
+                            image: "",
+                            etherPrice: 0
+                        };
+                    }
+                }));
+                setMarketItems(prevItems => [...prevItems, ...updatedItems]);
+            } catch (error) {
+                console.error('Error fetching market items:', error);
+            }
+        };
+
+        if (!initialized.current) 
+        {
             initialized.current = true;
-            getMarketItems()
-                .then(items => {
-                    return Promise.all(items.map(item => {
-                        return axios.get(item.tokenURI)
-                            .then(response => {
-                                const { name, description, image } = response.data;
-                                const avatar = image1;
-                                const etherPrice = formatPrice(item.price);
-                                return {
-                                    ...item,
-                                    name,
-                                    description,
-                                    image,
-                                    avatar,
-                                    etherPrice
-                                };
-                            });
-                    }));
-                })
-                .then(updatedItems => {
-                    setMarketItems(updatedItems);
-                })
-                .catch(error => {
+            if (typeof addresses !== 'undefined')
+            {
+                addresses.forEach(address => {
+                    getUserMarketItems(address, 0n).then(items => 
+                    {
+                        fetchMarketItems(items);
+                    }).catch(error => 
+                    {
+                        console.error('Error fetching market items:', error);
+                    });
+                });
+            }
+            else
+            {
+                getMarketItems().then(items => 
+                {
+                    fetchMarketItems(items);
+                }).catch(error => 
+                {
                     console.error('Error fetching market items:', error);
                 });
+            }
         }
         document.documentElement.classList.add('dark');
-    }, [getMarketItems]);
-
-    const calculateDays = (date) => {
-        let startDate = new Date(date);
-        let currentDate = new Date();
-        const diff = startDate.getTime() - currentDate.getTime();
-
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        return { hours, minutes, seconds, days }
-    }
+    }, [getMarketItems, getUserMarketItems, address, formatPrice]);
 
     return (
         <>
@@ -75,7 +97,7 @@ export default function ItemsGrid(props) {
                     ) : ('')
                 }
                 {marketItems.length === 0 ? (
-                    <p style={{ textAlign: 'center' }}>No data found</p>
+                    <p style={{ textAlign: 'center' }}>&nbsp;</p>
                 ) : (
                 <div className={`grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[30px] ${title !== undefined ? 'mt-12' : ''}`}>
                     {
@@ -103,8 +125,8 @@ export default function ItemsGrid(props) {
 
                                 <div className="mt-3">
                                     <div className="flex items-center">
-                                        <img src={ele.avatar} className="rounded-full h-8 w-8" alt="" />
-                                        <Link to={`${urls.creator_profile}/${ele.tokenId}`} className="ms-2 text-[15px] font-medium text-slate-400 hover:text-violet-600">@StreetBoy</Link>
+                                        <img src={ele.userInfo.avatar} className="rounded-full h-8 w-8" alt="" />
+                                        <Link to={`${urls.creator_profile}/${ele.userInfo.sid}`} className="ms-2 text-[15px] font-medium text-slate-400 hover:text-violet-600">@{ele.userInfo.art_name}</Link>
                                     </div>
 
                                     <div className="my-3">
