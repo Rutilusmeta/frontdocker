@@ -16,7 +16,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
 {
     let providerAddress;
 
-    switch (process.env.REACT_APP_CURRENT_ENV) 
+    switch (process.env.REACT_APP_CHAIN_ENV) 
     {
         case 'dev':
             providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;

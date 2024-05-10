@@ -82,7 +82,7 @@ export default function ItemDetail()
         }
         try
         {
-            const result = await buyMarketItem(tokenId, marketItem.etherPrice);
+            const result = await buyMarketItem(tokenId, marketItem.etherPrice); 
             if (result)
             {
                 setItemSoldMsg(`Congratulations, you can now go to <a href="${urls.user_nfts}" style="color: blue;">my nft page</a>.`);

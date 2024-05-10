@@ -16,20 +16,24 @@ const EnvDiv = () =>
     whichEnv = 'WEBSERVER';
   }
   let bgColor;
-  switch (whichEnv)
+  switch (process.env.REACT_APP_ENV)
   {
-    case 'NPM':
+    case 'dev':
       bgColor = 'green';
       break;
-    case 'WEBSERVER':
-      bgColor = 'blue';
+    case 'testing':
+      bgColor = 'orange';
       break;
     default:
-      bgColor = 'orange'; // Default color if no match
+      bgColor = 'blue'; // Default color if no match
   }
 
   useEffect(() => 
   {
+    if (process.env.REACT_APP_ENV === 'prod')
+    {
+      return;
+    }
     const fetchData = async () => 
     {
       try 
@@ -59,7 +63,7 @@ const EnvDiv = () =>
     }
   }, []); // Empty dependency array to run the effect only once when the component mounts
 
-  return (
+  return process.env.REACT_APP_ENV !== 'prod' && (
     <>
       <div className="fixed rounded-md z-10 bottom-5 flex" style={{ padding: '5px', backgroundColor: bgColor }}>
         <p>
@@ -71,32 +75,6 @@ const EnvDiv = () =>
       </div>
     </>
   )
-  
-  /*return (
-  <>
-      {process.env.REACT_APP_CURRENT_ENV === 'dev' && (
-        <>
-          <div className="absolute inset-y-0 right-0 m-4 p-4 text-white rounded-lg shadow-lg" style={{backgroundColor: 'green'}}>
-            DEV ENV<br />
-            Chain address: {process.env.REACT_APP_CHAIN_ADDRESS_DEV.replace(/:\w+@/, ':XXXX@')}<br />
-            Chain ID: {process.env.REACT_APP_CHAIN_ID_DEV}<br />
-            API address: {process.env.REACT_APP_API_ADDRESS} ({apiEnv})<br />
-          </div>
-        </>
-      )}
-      {process.env.REACT_APP_CURRENT_ENV === 'testing' && (
-        <>
-          <div className="absolute inset-y-0 right-0 m-4 p-4 text-white rounded-lg shadow-lg" style={{backgroundColor: 'blue'}}>
-            TESTING ENV<br />
-            Chain address: {process.env.REACT_APP_CHAIN_ADDRESS_TESTING}<br />
-            Chain ID: {process.env.REACT_APP_CHAIN_ID_TESTING}<br />
-            API address: {process.env.REACT_APP_API_ADDRESS} ({apiEnv})<br />
-          </div>
-      </>
-      )}
-  </>
-      )*/
-    
 };
 
 export default EnvDiv;

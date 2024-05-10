@@ -73,3 +73,11 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 ## Testing the build
 
 ### `npm install serve && serve -s build`
+
+## Override env variables
+
+You can override env variables before calling npm:
+```
+REACT_APP_ENV=prod npm start
+REACT_APP_ENV=prod npm run build
+```

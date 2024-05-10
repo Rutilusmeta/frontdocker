@@ -55,7 +55,7 @@ export default function CreatorProfile()
                     <section className="relative md:pb-24 pb-16 lg:mt-24 mt-[74px]">
                         <div className="lg:container container-fluid">
                             <div className="group profile-banner relative overflow-hidden text-transparent lg:rounded-xl shadow dark:shadow-gray-700">
-                                <input id="pro-banner" name="profile-banner" type="file" className="hidden" onChange={loadFile} />
+                                {/*<input id="pro-banner" name="profile-banner" type="file" className="hidden" onChange={loadFile} />*/}
                                 <div className="relative shrink-0">
                                     <img src={single} className="h-80 w-full object-cover" id="profile-banner" alt="" />
                                     <div className="absolute inset-0 bg-slate/10 group-hover:bg-slate-900/40 transition duration-500" /></div>
@@ -67,7 +67,7 @@ export default function CreatorProfile()
                             <div className="md:w-full">
                                 <div className="relative -mt-[60px] text-center p-4">
                                     <div className="group profile-pic w-[112px] mx-auto">
-                                        <input id="pro-img" name="profile-image" type="file" className="hidden" onChange={loadFile} />
+                                        {/*<input id="pro-img" name="profile-image" type="file" className="hidden" onChange={loadFile} />*/}
                                         <div>
                                             <div className="relative h-28 w-28 mx-auto rounded-full shadow dark:shadow-gray-800 ring-4 ring-slate-50 dark:ring-slate-800 overflow-hidden">
                                                 <img src={userDetails.avatar} className="rounded-full" id="profile-image" alt="" />
