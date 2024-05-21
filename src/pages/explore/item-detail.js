@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useContext } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import image from '../../assets/images/items/3.gif';
 import Navbar from '../../components/navbar'
@@ -9,8 +9,9 @@ import {IoMdClose,BsExclamationOctagon} from "../../assets/icons/vander"
 import misc from "../../constants/misc";
 import urls from '../../constants/urls';
 import axios from 'axios'; // Import axios for HTTP requests
-//import UserContext from '../../contexts/UserContext';
+import UserContext from '../../contexts/UserContext';
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
+import { useAccount, useConnectModal } from '@particle-network/connectkit'
 
 export default function ItemDetail() 
 {
@@ -22,10 +23,13 @@ export default function ItemDetail()
     const [placeBid , setPlaceBid] = useState(false);
     const [userDetails, setUserDetails] = useState(null);
     const [itemSoldMsg, setItemSoldMsg] = useState('');
-    const [buyNow, setBuyNow] =  useState(false);
+    const [buyNow, setBuyNow] = useState(false);
     const { getMarketItem, formatPrice, buyMarketItem, connectWallet } = useNFTMarketplace();
+    const { getUserAvatar } = useContext(UserContext);
     const initialized = useRef(false);
     const [marketItem, setMarketItem] = useState(false);
+    const connectModal = useConnectModal();
+    const account = useAccount();
 
     useEffect(() => 
     {
@@ -53,13 +57,13 @@ export default function ItemDetail()
                         });
 
                 }).then(updatedItem => {
-                    return axios.get(process.env.REACT_APP_API_ADDRESS + '/listing/' + updatedItem.tokenId)
+                    return axios.get(process.env.REACT_APP_API_ADDRESS + '/user/details/' + updatedItem.seller)
                         .then(response => {
-                            const { art_name, avatar, sid } = response.data.result.data;
+                            const { art_name, avatar, sid, address } = response.data.result.data;
                             updatedItem.art_name = art_name;
                             updatedItem.avatar = avatar;
                             updatedItem.sid = sid;
-                            console.log(updatedItem);
+                            updatedItem.avatar = getUserAvatar(updatedItem);
                             setMarketItem(updatedItem);
                         }).catch(error => {
                             console.error('Error fetching additional data:', error);
@@ -73,11 +77,15 @@ export default function ItemDetail()
 
     const buyMarketItemHandler = async (tokenId) => 
     {
+        if (!account){
+            connectModal.openConnectModal();
+            return;
+        }
         setItemSoldMsg('');
-        const accounts = await connectWallet();
-        if (marketItem.seller.toLowerCase() === accounts[0].toLowerCase())
+        //const accounts = await connectWallet();
+        if (marketItem.seller.toLowerCase() === account.toLowerCase())
         {
-            alert("You already alrady selling this item");
+            alert("You are already selling this item");
             return;
         }
         try
@@ -85,7 +93,7 @@ export default function ItemDetail()
             const result = await buyMarketItem(tokenId, marketItem.etherPrice); 
             if (result)
             {
-                setItemSoldMsg(`Congratulations, you can now go to <a href="${urls.user_nfts}" style="color: blue;">my nft page</a>.`);
+                setItemSoldMsg(`Congratulations, you can view your item here: <a href="${urls.user_nfts}/${account}" style="color: blue;">my nft</a>.`);
             }
         }
         catch (error) 
@@ -158,7 +166,7 @@ export default function ItemDetail()
                                         </div>
 
                                         <div className="ms-3">
-                                            <Link to={`/creator-profile/${marketItem.sid}`} className="font-semibold block hover:text-violet-600">{marketItem.art_name}</Link>
+                                            <Link to={`/creator-profile/${marketItem.sid}`} className="font-semibold block hover:text-violet-600">@{marketItem.art_name}</Link>
                                             <span className="text-slate-400 text-[16px] block mt-1">Seller</span>
                                         </div>
                                     </div>

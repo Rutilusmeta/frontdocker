@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef, useContext, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useContext, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
@@ -6,16 +7,29 @@ import urls from '../constants/urls'
 import { Link } from "react-router-dom";
 import EnvDiv from './env-div';
 import { PiWalletBold/*, AiOutlineCopy*/, AiOutlineUser, LuSettings, LiaSignOutAltSolid } from "../assets/icons/vander"
-import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
+
+import { ConnectButton, useAccount, useConnectModal, useConnectId, useParticleConnect, useParticleProvider } from '@particle-network/connectkit'
+//import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
+import { useAuthCore } from '@particle-network/auth-core-modal';
+
 import UserContext from '../contexts/UserContext';
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
 
+import axios from 'axios';
+import qs from 'querystring-es3';
+
 export default function Navbar() 
 {
-    const { userData, checkUserData } = useContext(UserContext);
-    const { getAccounts, getBalance } = useNFTMarketplace();
-    const { connect, disconnect } = useConnect();
-    const { userInfo } = useAuthCore();
+    const account = useAccount();
+    const provider = useParticleProvider();
+    const { disconnect, connectKit, connect, connected } = useParticleConnect();
+    const connectModal = useConnectModal();
+    const connectID = useConnectId();
+
+    const { userData, clearUser, updateUser } = useContext(UserContext);
+    const { connectWallet, getBalance, getAccounts } = useNFTMarketplace();
+//    const { connect, disconnect } = useConnect();
+//    const { userInfo } = useAuthCore();
     const [isDropdown, openDropdown] = useState(true);
     const [isOpen, setMenu] = useState(true);
     const [imageSrc, setImageSrc] = useState(null);
@@ -25,6 +39,15 @@ export default function Navbar()
     const [addressBalance, setAddressBalance] = useState(0);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const initialized = useRef(false);
+    const isConnected = useRef(false);
+    const isDisconnected = useRef(false);
+
+    const [message, setMessage] = useState('some message');
+    const [signature, setSignature] = useState('');
+    const [expectedAddress, setExpectedAddress] = useState('');
+    const [verificationResult, setVerificationResult] = useState('');
+    const location = useLocation();
+    const [loading, setLoading] = useState(false);
 
     const isMetaMaskInstalled = () => 
     {
@@ -33,9 +56,8 @@ export default function Navbar()
 
     const onClickConnect = async () => 
     {
-        if (!isMetaMaskInstalled()) 
-        {
-            setIsModalOpen(true);
+        if (!account){
+            connectModal.openConnectModal();
             return;
         }
         try 
@@ -108,8 +130,24 @@ export default function Navbar()
     useEffect(() => 
     {
         activateMenu();
+        //console.log('the account', account);
+        /*if (account && !initialized.current) {
+            initialized.current = true;
+            console.log("connectKit", connectKit);
+            console.log("connectKit particle:",connectKit.particle);
+            //const user = getUserInfo();
+            //console.log("userinfo:", user);
+            console.log("account:", account);
+            console.log("connectID:", connectID);
+            //console.log("accountInfo:", userInfo);
+            //fetchBalance(account); 
+
+            //authenticate();
+            //const result = checkUserData();
+
+        }*/
         //console.log("NAVABR", userData, userInfo);
-        if (userInfo && !initialized.current) 
+       /* if (userInfo && !initialized.current) 
         {
             //console.log("CHEKING NAVBAR", userData, userInfo);
             initialized.current = true;
@@ -136,17 +174,122 @@ export default function Navbar()
                     setImageSrc(`/avatar/1.jpg`); 
                 }
             }
-        }
-    }, [activateMenu, userInfo, checkUserData, userData, disconnect]);
+        }*/
+
+        connectKit.on('connect', async (provider) => 
+        {
+            if (!isConnected.current)
+            {
+                isConnected.current = true;
+                isDisconnected.current = false;
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const userDataString = localStorage.getItem('userData');
+                const wallet = localStorage.getItem('particle_connect_cached_provider');
+                let userDataFromStorage = { address: null, wallet: null };
+                if (userDataString !== null)
+                {
+                    userDataFromStorage = JSON.parse(userDataString);
+                }
+                if (userDataString === null || accounts[0] != userDataFromStorage.address || userDataFromStorage.wallet != wallet) 
+                {
+                    try {
+                        const messageToSign = `Authentication message: ${message}`;
+                        const signedMessage = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [messageToSign, accounts[0]]
+                        });
+                        const params = {
+                            signature: signedMessage,
+                            message: messageToSign,
+                            address: accounts[0],
+                            wallet: localStorage.getItem('particle_connect_cached_provider')
+                        };
+                        const formData = qs.stringify(params);
+                        try {
+                            const response = await axios.post(process.env.REACT_APP_API_ADDRESS + '/verify-signature', formData, {
+                                headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                                }
+                            });
+                            //console.log('Response:', response, response.data.result.success, response.data);
+                            if (response.status === 200 && response.data.result.success) {
+                                updateUser(response.data.result.data);
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            disconnect();
+                            //window.location.reload();
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error signing message:', error);
+                        disconnect();
+                        //window.location.reload();
+                        return; 
+                    }
+                }
+                await connectWallet();
+                if (userData && userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
+                {
+                    setImageSrc(userData.avatar); 
+                }
+                else if (userData && userData.avatar)
+                {
+                    setImageSrc(`/avatar/${userData.avatar}`); 
+                }
+                else
+                {
+                    setImageSrc(`/avatar/1.jpg`); 
+                }
+                if (userData)
+                {
+                    setWalletAddress(userData.address);
+                    const balance = await getBalance(userData.address);
+                    setAddressBalance(balance);
+                    //setIsDialogOpen(true);
+                }
+                if (urls.become_creator === location.pathname && userData) {
+                    window.location.href = urls.upload_work;
+                }
+                /*if (urls.upload_work === location.pathname && !userData) {
+                    window.location.href = urls.become_creator;
+                }*/
+            }
+        });
+        connectKit.on('disconnect', async () => 
+        {
+            if (!isDisconnected.current)
+                {
+    
+                    isDisconnected.current = true;
+                    isConnected.current = false;
+                    console.log('disconnected');
+                    //window.location.reload();
+                }
+            try{
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                //console.log("WE STILL HAVE SIGNATURE MESSAGE", accounts);
+            } catch (error) {
+                //console.error('Now we have to verify signature msg again', error);
+                clearUser();
+                //setLoading(false);
+            }
+        });
+
+    }, [activateMenu]);
 
     const handleLogin = async () => 
     {
         try 
         {
-            if (!userInfo) 
-            {
-                await connect({});
-            }
+            //if (!userInfo) 
+            //{
+                //await connect({});
+                //const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                //console.log(accounts);
+                connectModal.openConnectModal();
+                //console.log(account);
+           // }
         } 
         catch (error) 
         {
@@ -163,8 +306,9 @@ export default function Navbar()
 
     const handleLogout = async () => 
     {
+        //clearUser();
         await disconnect();
-        window.location.reload();
+        //window.location.reload();
     };
 
     window.addEventListener("scroll", windowScroll);
@@ -335,95 +479,96 @@ export default function Navbar()
                         </div>
                     </div>
 
-                   {/* <!--Login button Start--> */}
-                   <ul className="buy-button list-none mb-0">
-
-                        {/*<li className="inline-block mb-0">
-                            <div className="form-icon relative">
-                                <LuSearch className="text-lg absolute top-1/2 -translate-y-1/2 start-3"/>
-                                <input type="text" className="form-input sm:w-44 w-28 ps-10 py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-3xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 bg-white" name="s" id="searchItem" placeholder="Search..." />
-                            </div>
-                        </li>*/}
-
-                        <li className="inline-block ps-1 mb-0">
-                            <button
-                                onClick={onClickConnect}
-                                className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"
-                            >
-                                <PiWalletBold />
-                            </button>
-                        </li>
-
-                        <div className={`fixed inset-0 z-10 overflow-y-auto ${isModalOpen ? 'block' : 'hidden'}`}>
-                            <div className="flex items-center justify-center min-h-screen">
-                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-                                <div className="relative bg-white rounded-lg max-w-lg w-full p-4">
-                                    <h2 className="text-xl text-black font-semibold mb-4">Install MetaMask</h2>
-                                    <p className="text-black">
-                                        MetaMask is a digital wallet that allows you to interact with Ethereum decentralized applications (DApps) in your browser.
-                                        <br />
-                                        To use this application, you need to have MetaMask installed in your browser.
-                                        <br />
-                                        You can download MetaMask from <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">metamask.io</a>.
-                                    </p>
-                                    <button className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" onClick={() => setIsModalOpen(false)}>Close</button>
+                    <div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
+                        <div className="flex items-center justify-center min-h-screen">
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                            <div className="relative bg-white rounded-lg max-w-lg w-full p-4">
+                                <div className="text-center">
+                                    <p className="text-lg font-medium text-black">Address:</p>
+                                    <p className="text-lg font-medium text-black">{walletAddress}</p>
+                                    <p className="text-lg font-medium text-black">Balance:</p>
+                                    <p className="text-lg font-medium text-black">{addressBalance} ETH</p>
+                                    <button className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-violet-600 hover:text-white" onClick={() => setIsDialogOpen(false)}>Close</button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/*<div id="myPublicAddress">{walletAddress}</div>*/}
+                    {/* <!--Login button Start--> */}
+                    <ConnectButton.Custom>
+                        {({ account, openConnectModal }) => {
+                            if (!account) {
+                                return (
+                                    <ul className="buy-button list-none mb-0">
+                                        <li className="inline-block ps-1 mb-0">
+                                            <button onClick={handleLogin} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" type="button">
+                                                login
+                                            </button>
+                                        </li>
+                                    </ul>
+                                );
+                            } else {
+                                return (
+                                    <ul className="buy-button list-none mb-0">
 
-                        <li className="dropdown inline-block relative ps-1">
-                            {!userInfo ? (
-                                <button onClick={() => handleLogin()} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full" type="button">
-                                    Login
-                                </button>
-                            ) : (
-                                <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
-                                    <img src={imageSrc} className="rounded-full" alt="" />
-                                </button>
-                            )}
-                            <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 w-48 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} >
-                                <div className="relative">
-                                    <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
-                                    <div className="absolute px-4 -bottom-7 start-0">
-                                        <div className="flex items-end">
-                                            <img src={imageSrc} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
-                                            {userData && (
-                                             <span className="font-semibold text-[15px] ms-1">{userData.firstname}</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                        <li className="inline-block ps-1 mb-0">
+                                            <button
+                                                onClick={onClickConnect}
+                                                className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white">
+                                                <PiWalletBold />
+                                            </button>
+                                        </li>
 
-                               {/*<div className="mt-10 px-4">
-                                    <h5 className="font-semibold text-[15px]">Wallet:</h5>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[13px] text-slate-400">{walletAddress.slice(0, 6) + '...' + walletAddress.slice(-7)}</span>
-                                        */}{/*<Link to="#" className="text-violet-600"><AiOutlineCopy/></Link>*/}
-                                    {/* </div>
-                                </div>
-
-                                <div className="mt-4 px-4">
-                                    <h5 className="text-[15px]">Balance: <span className="text-violet-600 font-semibold">{addressBalance}</span></h5>
-                                </div>*/}
-
-                                {/*<ul className="py-2 text-start">*/}
-                                <ul className="mt-10 px-4">
-                                    <li>
-                                        <Link to={`/creator-profile/${userID}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/creator-profile-edit" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LuSettings className="text-[16px] align-middle me-1"/> Settings</Link>
-                                    </li>
-                                    <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
-                                    <li>
-                                        <Link onClick={() => handleLogout()} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LiaSignOutAltSolid className="text-[16px] align-middle me-1"/> Logout</Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        </ul>
+                                        <li className="dropdown inline-block relative ps-1">
+                                            <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
+                                                <img src={imageSrc} className="rounded-full" alt="" />
+                                            </button>
+                                            <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 min-w-200 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} style={{ minWidth: '200px' }}>
+                                                <div className="relative">
+                                                    <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
+                                                    <div className="absolute px-4 -bottom-7 start-0">
+                                                        <div className="flex items-end">
+                                                            <img src={imageSrc} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
+                                                            {userData && (
+                                                                <span className="font-semibold text-[15px] ms-1">{userData.art_name}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-10 px-4">
+                                                    <h5 className="font-semibold text-[15px]">&nbsp;</h5>
+                                                    {/*<div className="flex items-center justify-between">
+                                                        <span className="text-[13px] text-slate-400">{account}</span>
+                                                    </div>*/}
+                                                </div>
+                                               
+                                                <ul className="py-2 text-start">
+                                                    <li>
+                                                        <Link to={`${urls.user_nfts}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/>My NFT</Link>
+                                                    </li>
+                                                    <li>
+                                                        <Link to={`${urls.creator_profile}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/>Profile</Link>
+                                                    </li>
+                                                    {/*<li>
+                                                        <Link to={`${urls.creator_profile_id}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
+                                                        </li>*/}
+                                                    {/*<li>
+                                                        <Link to="/creator-profile-edit" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LuSettings className="text-[16px] align-middle me-1"/> Settings</Link>
+                                                    </li>*/}
+                                                    <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
+                                                    <li>
+                                                        <Link className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600" onClick={handleLogout}>
+                                                            <LiaSignOutAltSolid className="text-[16px] align-middle me-1"/> Logout
+                                                        </Link>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li> 
+                                    </ul>
+                                )
+                            }
+                        }}
+                    </ConnectButton.Custom>
 
                     <div id="navigation" className={`${isOpen === true ? 'hidden' : 'block'}`}>
                         <ul className="navigation-menu justify-end">
@@ -486,12 +631,12 @@ export default function Navbar()
                                     <li><Link to={urls.upload_work} className="sub-menu-item">Privacy Policy</Link></li>
                                 </ul>
                             </li>*/}
-                            {userInfo ? (
+                            {account ? (
                                 <li><Link to={urls.upload_work} className="sub-menu-item">Upload Works</Link></li>
                             ) : (
                                 <li><Link to={urls.become_creator} className="sub-menu-item">Become Creator</Link></li>
                             )}
-                            <li><Link to={urls.user_nfts} className="sub-menu-item">My NFT</Link></li>
+                            {/*<li><Link to={urls.user_nfts} className="sub-menu-item">My NFT</Link></li>*/}
                             <li><Link to={urls.contact} className="sub-menu-item">Contact</Link></li>
                     </ul>
                 </div>

@@ -11,6 +11,10 @@ async function main() {
   console.log("upgrade to NFTMarketplaceV2...");
   const nftmarketplaceV2 = await upgrades.upgradeProxy(proxyAddress, NFTMarketplaceV2);
   console.log(nftmarketplaceV2.target,"NFTMarketplaceV2 address(should be the same)");
+  const commissionReceiver = process.env.REACT_APP_COMMISSION_ADDRESS;
+  const commissionPercentage = 1;
+  console.log("Initializing NFTMarketplaceV2...");
+  await nftmarketplaceV2.initializeV2(commissionReceiver, commissionPercentage);
 }
 
 // Execute the deployment script

@@ -9,6 +9,7 @@ import {AiOutlineDashboard, PiBrowsers, AiOutlineSetting, IoMdLogOut} from "../.
 import FormData from "form-data";
 import axios from "axios";
 //import { useAuthCore } from '@particle-network/auth-core-modal';
+import { useAccount, useConnectModal } from '@particle-network/connectkit'
 import UserContext from '../../contexts/UserContext';
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
 
@@ -24,10 +25,16 @@ export default function UploadWork()
     const [successMessage, setSuccessMessage] = useState('');
     //const { userInfo } = useAuthCore();
     const { userData, getUserAvatar } = useContext(UserContext);
+    const connectModal = useConnectModal();
+    const account = useAccount();
     const initialized = useRef(false);
 
     const createNFTForm = async (event) => 
     {
+        if (!account){
+            connectModal.openConnectModal();
+            return;
+        }
         setSuccessMessage('');
         event.preventDefault();
 		if (imageURI === "") 
@@ -44,10 +51,10 @@ export default function UploadWork()
         setLoading(true);
         const created = await mintNFT();
         setSubmitting(false);
-        setLoading(false);
+        //setLoading(false);
         if (created)
         {
-            setSuccessMessage(`NFT created successfully, go to <a href="${urls.user_nfts}" style="color: blue;">my nft page</a> to view it.`);
+            setSuccessMessage(`NFT created successfully, go to <a href="${urls.user_nfts}/${account}" style="color: blue;">my nft page</a> to view it.`);
         }
         else
         {
@@ -58,6 +65,10 @@ export default function UploadWork()
 
     const mintNFT = async () => 
     {
+        if (!account){
+            connectModal.openConnectModal();
+            return;
+        }
         try
         {
             const jsonData = 
@@ -76,7 +87,7 @@ export default function UploadWork()
                 }
             });
             const tokenURI = res.data.fastUrl;
-            const accounts = await getAccounts();
+            //const accounts = await getAccounts();
             return await createMarketItem(tokenURI, 0);
         }
         catch (error) 
@@ -88,17 +99,21 @@ export default function UploadWork()
     useEffect(() => 
     {
         document.documentElement.classList.add('dark');
-        if (/*userInfo &&*/ !initialized.current) 
+        if (userData && !initialized.current) 
         {
             initialized.current = true;
             const avatar = getUserAvatar(userData);
             setImageSrc(avatar); 
-            console.log(userData);
+            //console.log(userData);
         }
     }, [getUserAvatar, userData]);
 
     const handleChange = async () => 
     {
+        if (!account){
+            connectModal.openConnectModal();
+            return;
+        }
 		const fileUploader = document.querySelector("#input-file");
 		const getFile = fileUploader.files;
 		if (getFile.length !== 0) {
@@ -167,120 +182,122 @@ export default function UploadWork()
                     </svg>
                 </div>
             </div>
+            {userData && (
+                <section className="relative md:py-24 py-16">
+                    <div className="container">
+                        <div className="grid md:grid-cols-12 gap-[30px]">
+                            <div className="lg:col-span-3 md:col-span-4">
+                                <div className="overflow-hidden rounded-md shadow dark:shadow-gray-800 sticky top-20">
+                                    <div className="py-10 bg-[url('../../assets/images/blog/05.jpg')] bg-center bg-no-repeat"></div>
 
-            <section className="relative md:py-24 py-16">
-                <div className="container">
-                    <div className="grid md:grid-cols-12 gap-[30px]">
-                        <div className="lg:col-span-3 md:col-span-4">
-                            <div className="overflow-hidden rounded-md shadow dark:shadow-gray-800 sticky top-20">
-                                <div className="py-10 bg-[url('../../assets/images/blog/05.jpg')] bg-center bg-no-repeat"></div>
+                                    <div className="relative text-center -mt-10 p-6 pt-0">
+                                        <img src={imageSrc} className="bg-white dark:bg-slate-900 h-20 w-20 rounded-full shadow-md dark:shadow-gray-800 mx-auto p-1" alt="" />
 
-                                <div className="relative text-center -mt-10 p-6 pt-0">
-                                    <img src={imageSrc} className="bg-white dark:bg-slate-900 h-20 w-20 rounded-full shadow-md dark:shadow-gray-800 mx-auto p-1" alt="" />
+                                        <div className="mt-3">
+                                            {/*<Link to="/creator-profile/{userData.sid}" className="font-semibold block hover:text-violet-600">{userData.art_name}</Link>*/}
+                                            <span className="text-slate-400 text-sm block mt-1">{userData.art_name}</span>
+                                        </div>
 
-                                    <div className="mt-3">
-                                        {/*<Link to="/creator-profile/{userData.sid}" className="font-semibold block hover:text-violet-600">{userData.art_name}</Link>*/}
-                                        <span className="text-slate-400 text-sm block mt-1">{userData.art_name}</span>
+                                        <ul className="list-none sidebar-nav mb-0 mt-3" id="navmenu-nav">
+                                            {account && (
+                                                <li className="navbar-item account-menu text-[16px]">
+                                                    <Link to={`/creator-profile/${userData.address}`} className="navbar-link text-slate-400 flex items-center py-2 rounded">
+                                                        <span className="me-2 mb-0"><AiOutlineDashboard/></span>
+                                                        <h6 className="mb-0 font-medium">Profile</h6>
+                                                    </Link>
+                                                </li>
+                                            )}
+                                            <li className="navbar-item account-menu text-[16px] active">
+                                                <Link to="/upload-work" className="navbar-link text-slate-400 flex items-center py-2 rounded">
+                                                    <span className="me-2 mb-0"><PiBrowsers/></span>
+                                                    <h6 className="mb-0 font-medium">Upload Work</h6>
+                                                </Link>
+                                            </li>
+
+                                            {/*<li className="navbar-item account-menu text-[16px]">
+                                                <Link to="/creator-profile-edit" className="navbar-link text-slate-400 flex items-center py-2 rounded">
+                                                    <span className="me-2 mb-0"><AiOutlineSetting/></span>
+                                                    <h6 className="mb-0 font-medium">Settings</h6>
+                                                </Link>
+                                            </li>*/}
+
+                                            {/*<li className="navbar-item account-menu text-[16px]">
+                                                <Link to="/lock-screen" className="navbar-link text-slate-400 flex items-center py-2 rounded">
+                                                    <span className="me-2 mb-0"><IoMdLogOut /></span>
+                                                    <h6 className="mb-0 font-medium">Logout</h6>
+                                                </Link>
+                                            </li>*/}
+                                        </ul>
                                     </div>
-
-                                    <ul className="list-none sidebar-nav mb-0 mt-3" id="navmenu-nav">
-                                        <li className="navbar-item account-menu text-[16px]">
-                                            <Link to={`/creator-profile/${userData.sid}`} className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                                <span className="me-2 mb-0"><AiOutlineDashboard/></span>
-                                                <h6 className="mb-0 font-medium">Profile</h6>
-                                            </Link>
-                                        </li>
-
-                                        <li className="navbar-item account-menu text-[16px] active">
-                                            <Link to="/upload-work" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                                <span className="me-2 mb-0"><PiBrowsers/></span>
-                                                <h6 className="mb-0 font-medium">Upload Work</h6>
-                                            </Link>
-                                        </li>
-
-                                        <li className="navbar-item account-menu text-[16px]">
-                                            <Link to="/creator-profile-edit" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                                <span className="me-2 mb-0"><AiOutlineSetting/></span>
-                                                <h6 className="mb-0 font-medium">Settings</h6>
-                                            </Link>
-                                        </li>
-
-                                        {/*<li className="navbar-item account-menu text-[16px]">
-                                            <Link to="/lock-screen" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                                <span className="me-2 mb-0"><IoMdLogOut /></span>
-                                                <h6 className="mb-0 font-medium">Logout</h6>
-                                            </Link>
-                                        </li>*/}
-                                    </ul>
                                 </div>
                             </div>
-                        </div>
-                        <div className="lg:col-span-9 md:col-span-8">
-                            <div className="lg:flex p-6 bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-800">
-                                <div className="lg:w-1/3 md:w-full">
-                                    <p className="font-semibold mb-6">Upload your ART here, Please click "Upload Image" Button.</p>
-                                    <div className="preview-box flex justify-center rounded-md shadow dark:shadow-gray-800 overflow-hidden bg-gray-50 dark:bg-slate-800 text-slate-400 p-2 text-center small">Supports JPG, PNG and MP4 videos. Max file size : 10MB.</div>
-                                    <input type="file" id="input-file" name="input-file" accept="image/*" hidden onChange={handleChange} />
-                                    {loading && <div>Loading...</div>}
-                                    <label className="btn-upload btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full w-full mt-6 cursor-pointer" htmlFor="input-file">Upload Image</label>
-                                </div>
+                            <div className="lg:col-span-9 md:col-span-8">
+                                <div className="lg:flex p-6 bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-800">
+                                    <div className="lg:w-1/3 md:w-full">
+                                        <p className="font-semibold mb-6">Upload your ART here, Please click "Upload Image" Button.</p>
+                                        <div className="preview-box flex justify-center rounded-md shadow dark:shadow-gray-800 overflow-hidden bg-gray-50 dark:bg-slate-800 text-slate-400 p-2 text-center small">Supports JPG, PNG and MP4 videos. Max file size : 10MB.</div>
+                                        <input type="file" id="input-file" name="input-file" accept="image/*" hidden onChange={handleChange} />
+                                        {loading && <div>Loading...</div>}
+                                        <label className="btn-upload btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full w-full mt-6 cursor-pointer" htmlFor="input-file">Upload Image</label>
+                                    </div>
 
-                                <div className="lg:w-2/3 md:w-full mt-8 lg:mt-0 lg:ms-6">
-                                    <form>
-                                        <div className="grid grid-cols-12 gap-6">
-                                            <div className="col-span-12">
-                                                <label className="font-semibold">Art Title <span className="text-red-600">*</span></label>
-                                                <input name="name" id="name" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Title :" value={title} onChange={(e) => setTitle(e.target.value)}/>
+                                    <div className="lg:w-2/3 md:w-full mt-8 lg:mt-0 lg:ms-6">
+                                        <form>
+                                            <div className="grid grid-cols-12 gap-6">
+                                                <div className="col-span-12">
+                                                    <label className="font-semibold">Art Title <span className="text-red-600">*</span></label>
+                                                    <input name="name" id="name" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Title :" value={title} onChange={(e) => setTitle(e.target.value)}/>
+                                                </div>
+
+                                                <div className="col-span-12">
+                                                    <label className="font-semibold"> Description : </label>
+                                                    <textarea name="comments" id="comments" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Description :" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
+                                                </div>
+
+                                                {/*<div className="md:col-span-6 col-span-12">
+                                                    <label className="font-semibold">Type :</label>
+                                                    <select className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2">
+                                                        <option>GIFs</option>
+                                                        <option>Music</option>
+                                                        <option>Video</option>
+                                                        <option>Tech</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="md:col-span-6 col-span-12">
+                                                    <label className="font-semibold"> Rate : </label>
+                                                    <input name="time" type="number" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" id="time" placeholder="0.004ETH" />
+                                                </div>
+
+                                                <div className="col-span-12">
+                                                    <h6 className="font-semibold text-lg">Auction :</h6>
+                                                </div>
+
+                                                <div className="md:col-span-6 col-span-12">
+                                                    <label className="font-semibold"> Starting Date : </label>
+                                                    <input name="date" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2 start" placeholder="Select date :" />
+                                                </div>
+
+                                                <div className="md:col-span-6 col-span-12">
+                                                    <label className="font-semibold"> Expiration date : </label>
+                                                    <input name="date" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2 end" placeholder="Select date :" />
+                                                </div>*/}
+
+                                                <div className="col-span-12">
+                                                    <button type="submit" onClick={createNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>{submitting ? 'Submitting...' : 'Create Item'}</button>
+                                                    {successMessage && (
+                                                        <div dangerouslySetInnerHTML={{ __html: successMessage }} />
+                                                    )}
+                                                </div>
                                             </div>
-
-                                            <div className="col-span-12">
-                                                <label className="font-semibold"> Description : </label>
-                                                <textarea name="comments" id="comments" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Description :" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
-                                            </div>
-
-                                            {/*<div className="md:col-span-6 col-span-12">
-                                                <label className="font-semibold">Type :</label>
-                                                <select className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2">
-                                                    <option>GIFs</option>
-                                                    <option>Music</option>
-                                                    <option>Video</option>
-                                                    <option>Tech</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="md:col-span-6 col-span-12">
-                                                <label className="font-semibold"> Rate : </label>
-                                                <input name="time" type="number" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" id="time" placeholder="0.004ETH" />
-                                            </div>
-
-                                            <div className="col-span-12">
-                                                <h6 className="font-semibold text-lg">Auction :</h6>
-                                            </div>
-
-                                            <div className="md:col-span-6 col-span-12">
-                                                <label className="font-semibold"> Starting Date : </label>
-                                                <input name="date" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2 start" placeholder="Select date :" />
-                                            </div>
-
-                                            <div className="md:col-span-6 col-span-12">
-                                                <label className="font-semibold"> Expiration date : </label>
-                                                <input name="date" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2 end" placeholder="Select date :" />
-                                            </div>*/}
-
-                                            <div className="col-span-12">
-                                                <button type="submit" onClick={createNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>{submitting ? 'Submitting...' : 'Create Item'}</button>
-                                                {successMessage && (
-                                                    <div dangerouslySetInnerHTML={{ __html: successMessage }} />
-                                                )}
-                                            </div>
-                                        </div>
-                                    </form>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section> 
+            )}
             <Footer />
             <Switcher />
         </>

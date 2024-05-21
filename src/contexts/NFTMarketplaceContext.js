@@ -33,7 +33,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             break;
     }
  
-    const getMarketItems = async () => // we need to add this logic on the contract
+    const getMarketItems = async () =>
     {
         try 
         {
@@ -89,12 +89,15 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             return null;
         }
      };
-    const getUserMarketItems = async (address = null, state = null) => 
+    const getUserMarketItems = async (address, state = null) => 
+    //const getUserMarketItems = async (address = null, state = null) => 
     {
         try 
         {
-            const accounts = (address) ? [address] : await connectWallet();
-            const web3 = new Web3(window.ethereum);
+            //const accounts = (address) ? [address] : await connectWallet();
+            const accounts = [address];
+            //const web3 = new Web3(window.ethereum);
+            const web3 = new Web3(providerAddress);
             const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
             const records = await contract.methods.getMarketItemsBySeller(accounts[0]).call();
             //console.log("NFTMarketContext::getMarketItemsBySeller: ", records);
@@ -119,7 +122,8 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         return priceInEther.toString();
     }
 
-    const changeItemStateAndPrice = async (tokenId, price, state, userInfo) => 
+    const changeItemStateAndPrice = async (tokenId, price, state) => 
+    //const changeItemStateAndPrice = async (tokenId, price, state, userInfo) => 
     {
         try 
         {
@@ -133,7 +137,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             const priceInWei = web3.utils.toWei(price.toString(), "ether");
             const transaction = await contract.methods.changeItemStateAndPrice(tokenId, priceInWei, state).send({ from: accounts[0] });
             //console.log("changeItemStateAndPrice: ", tokenId, price, state, transaction);
-            if (state === 0n)
+            /*if (state === 0n)
             {
                 const headers = 
                 {
@@ -147,7 +151,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
                 }
                 let res = await axios.post(process.env.REACT_APP_API_ADDRESS + '/listing/', data, { headers: headers });
                 console.log(res);
-            }
+            }*/
             return transaction;
         } 
         catch (error) 
@@ -176,7 +180,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
 
     const connectWallet = async () => 
     {
-        switch (process.env.REACT_APP_CURRENT_ENV) 
+        switch (process.env.REACT_APP_CHAIN_ENV) 
         {
             case 'dev':
                 const decimalNumber = parseInt(process.env.REACT_APP_CHAIN_ID_DEV);

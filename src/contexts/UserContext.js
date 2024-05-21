@@ -3,10 +3,13 @@ import { createContext, useState, useEffect, useRef } from 'react';
 import { useAuthCore } from '@particle-network/auth-core-modal';
 import axios from 'axios';
 
+import { useAccount } from '@particle-network/connectkit'
+
 const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => 
 {
+    const account = useAccount();
     const { userInfo } = useAuthCore();
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true); // Add loading state
@@ -50,16 +53,6 @@ export const UserProvider = ({ children }) =>
             const resp = await axios.get(url);
             if (resp.status === 200 && resp.data.result.success === true) {
                 const result = resp.data.result.data;
-                result['addresses'] = {};
-                if (result.listings.length > 0) {
-                    result['addresses'] = []; // Initialize as an array if not already
-                    result.listings.forEach(listing => {
-                        const address = listing.address;
-                        if (address && !result['addresses'].includes(address)) {
-                            result['addresses'].push(address);
-                        }
-                    });
-                }
                 return result;
             }
             return null;
@@ -71,11 +64,11 @@ export const UserProvider = ({ children }) =>
         }
     }
 
-    const checkUserData = (userInfo) =>
+    const checkUserData = () =>
     {
         //console.log("User info from particle userInfo:", userInfo);
         //console.log("User info from particle userData:", userData);
-        let have_data = false;
+        /*let have_data = false;
         if (userData)
         {
             have_data = true;
@@ -108,7 +101,7 @@ export const UserProvider = ({ children }) =>
                 console.error('Error:', error);
                 return false;
             });
-        }
+        })*/
         return true;
     }
     const saveUserData = async (userInfo, formData) => 
@@ -143,16 +136,13 @@ export const UserProvider = ({ children }) =>
         if (!isMounted.current && userData === null)
         {
             isMounted.current = true;
-            //console.log("NOTUSERDATA", userInfo);
             const userDataString = localStorage.getItem('userData');
             if (userDataString !== null) 
             {
                 const userDataFromStorage = JSON.parse(userDataString);
                 setUserData(userDataFromStorage);
-                //console.log("NOT NULL", userDataFromStorage);
             }
-            //console.log("FIORED", localStorage.getItem('userData'));
-            setLoading(false); ;
+            setLoading(false); 
         }
 
     }, [userData, userInfo]);

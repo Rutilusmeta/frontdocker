@@ -81,3 +81,18 @@ You can override env variables before calling npm:
 REACT_APP_ENV=prod npm start
 REACT_APP_ENV=prod npm run build
 ```
+
+# Smart Contract
+
+## Testing
+
+```
+npx hardhat test src/contracts/test/NFTMarketplace.js
+npx hardhat test src/contracts/test/NFTMarketplace.proxy.js --network {NETWORK DEFINED IN HARDHAT CONFIG}
+```
+
+## Deploying
+
+```
+npx hardhat run src/contracts/scripts/1.nft-marketplace.deploy.js --network {NETWORK DEFINED IN HARDHAT CONFIG}
+```

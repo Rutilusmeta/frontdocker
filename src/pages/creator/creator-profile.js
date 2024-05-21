@@ -12,9 +12,8 @@ export default function CreatorProfile()
     const params = useParams();
     const id = params.id
 
-    const { getUserDetails } = useContext(UserContext);
+    const { getUserDetails, getUserAvatar } = useContext(UserContext);
     const [userDetails, setUserDetails] = useState(null);
-    const [addresses, setAddresses] = useState(null);
     const [noDetails, setNoDetails] = useState(false);
     const initialized = useRef(false);
 
@@ -32,8 +31,10 @@ export default function CreatorProfile()
                 setNoDetails(false);
                 initialized.current = true;
                 const result = await getUserDetails(id);
+                result.avatar = getUserAvatar(result);
                 if (result) 
                 {
+                    result.addresses = [id]
                     setUserDetails(result);
                 } 
                 else 

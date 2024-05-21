@@ -46,9 +46,9 @@ export default function ListNFT() {
 		}
 	};
 
-    const list = async () => {
+    /*const list = async () => {
         console.log("HERE");
-    };
+    };*/
 
     return (
 		<>

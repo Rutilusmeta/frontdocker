@@ -121,7 +121,7 @@ function App()
             <Route exact path={urls.creator_profile_edit} element={<ProtectedRoute/>}>
               <Route exact path={urls.creator_profile_edit} element={<CreatorProfileEdit/>}/>
             </Route>
-            <Route exact path={urls.user_nfts} element={<ListNFT/>}/>
+            <Route exact path={urls.user_nfts_id} element={<ListNFT/>}/>
             <Route path={urls.creators} element={<Creators />} />
             <Route path={urls.aboutus} element={<About />} />
             <Route path={urls.contact} element={<Contact />} />

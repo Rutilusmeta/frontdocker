@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useContext } from 'react'
 import { Link } from 'react-router-dom';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from '../assets/icons/vander'
 import misc from "../constants/misc";
 import urls from '../constants/urls';
 import axios from 'axios'; // Import axios for HTTP requests
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
+import UserContext from '../contexts/UserContext';
 
 export default function ItemsGrid(props) {
 
@@ -12,6 +13,7 @@ export default function ItemsGrid(props) {
     const [marketItems, setMarketItems] = useState([]);
     const [noData, setNoData] = useState(false);
     const { getMarketItems, getUserMarketItems, formatPrice } = useNFTMarketplace();
+    const { getUserAvatar } = useContext(UserContext);
     const initialized = useRef(false);
 
     useEffect(() => 
@@ -28,25 +30,37 @@ export default function ItemsGrid(props) {
                         const response = await axios.get(item.tokenURI);
                         const { name, description, image } = response.data;
                         const etherPrice = formatPrice(item.price);
-                        const user_data = await axios.get(process.env.REACT_APP_API_ADDRESS + '/listing/' + item.tokenId);
-                        const userInfo = user_data.data.result.data;
+                        let user_data = {};
+                        let userInfo = {};
+                        try{
+                            user_data = await axios.get(process.env.REACT_APP_API_ADDRESS + '/user/details/' + item.seller);
+                            userInfo = user_data.data.result.data;
+                        }
+                        catch (error) {
+                            console.error("Error fetching additional data:", error);
+                            userInfo = { address: null, sid: null, avatar: '/avatar/1.jpg', art_name: 'Unnamed' }
+                        }
+                        const avatar = getUserAvatar(userInfo);
                         return {
                             ...item,
                             name,
                             description,
                             image,
                             etherPrice,
+                            avatar,
                             userInfo
                         };
                     } catch (error) {
+                        //const userInfo = { address: null, sid: null, avatar: '/avatar/1.jpg', art_name: 'Unnamed' }
                         console.error("Error fetching additional data:", error);
-                        return {
+                        /*return {
                             ...item,
-                            name: "Error",
-                            description: "Error fetching data",
-                            image: "",
-                            etherPrice: 0
-                        };
+                            //name,
+                            description,
+                            image,
+                            etherPrice: 0,
+                            userInfo
+                        };*/
                     }
                 }));
                 setMarketItems(prevItems => [...prevItems, ...updatedItems]);
@@ -125,9 +139,9 @@ export default function ItemsGrid(props) {
 
                                 <div className="mt-3">
                                     <div className="flex items-center">
-                                        <img src={ele.userInfo.avatar} className="rounded-full h-8 w-8" alt="" />
+                                        <img src={ele.avatar} className="rounded-full h-8 w-8" alt="" />
                                         <Link to={`${urls.creator_profile}/${ele.userInfo.sid}`} className="ms-2 text-[15px] font-medium text-slate-400 hover:text-violet-600">@{ele.userInfo.art_name}</Link>
-                                    </div>
+                                   </div>
 
                                     <div className="my-3">
                                         <Link to={`${urls.item_detail}/${ele.tokenId}`} className="font-semibold hover:text-violet-600">{ele.name}</Link>

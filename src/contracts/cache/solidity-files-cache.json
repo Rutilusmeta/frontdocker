@@ -869,8 +869,8 @@
       ]
     },
     "/app/contracts/NFTMarketplace.sol": {
-      "lastModificationDate": 1714115718079,
-      "contentHash": "96aef6dc61bcfbf25d6da2bc8cee9cc4",
+      "lastModificationDate": 1716288890657,
+      "contentHash": "550390a219902b58e830ac6d1640acbb",
       "sourceName": "contracts/NFTMarketplace.sol",
       "solcConfig": {
         "version": "0.8.18",
@@ -907,6 +907,47 @@
       ],
       "artifacts": [
         "NFTMarketplace"
+      ]
+    },
+    "/app/contracts/NFTMarketplaceV2.sol": {
+      "lastModificationDate": 1716295993613,
+      "contentHash": "af18fab7c645b895bc437d2b3ee29966",
+      "sourceName": "contracts/NFTMarketplaceV2.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "NFTMarketplaceV2"
       ]
     }
   }

@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import axios from 'axios'; // Import axios for HTTP requests
 import misc from "../constants/misc"
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "../assets/icons/vander";
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
 import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
-
+import { useAccount, useConnectModal } from '@particle-network/connectkit'
 export default function UserNftGrid(props) 
 {
+    const params = useParams();
+    const address = params.id
+    const account = useAccount();
+    const connectModal = useConnectModal();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [marketItems, setMarketItems] = useState([]);
     const [itemTitle, setItemTitle] = useState([]);
@@ -24,7 +28,7 @@ export default function UserNftGrid(props)
 
     const handleListItemClick = async (item, index) => 
     {
-        try 
+        /*try 
         {
             if (!userInfo) 
             {
@@ -41,6 +45,18 @@ export default function UserNftGrid(props)
             {
                 console.error("Error:", error); 
             }
+            return;
+        }
+        setTokenID(item.tokenId);
+        setItemTitle(item.name);
+        setItemPrice(item.etherPrice);
+        setItemState(item.state);
+        setItemIndex(index);
+        setLoading(false);
+        setDialogOpen(true);*/
+        if (!account)
+        {
+            connectModal.openConnectModal();
             return;
         }
         setTokenID(item.tokenId);
@@ -71,7 +87,7 @@ export default function UserNftGrid(props)
                 }
             }
             //console.log(tokenID, price, state);
-            await changeItemStateAndPrice(tokenID, price, state, userInfo);
+            await changeItemStateAndPrice(tokenID, price, state/*, userInfo*/);
             updateItemStateAndPriceAtIndex(itemIndex, price, state);
             setDialogOpen(false);
             setLoading(false);
@@ -100,7 +116,7 @@ export default function UserNftGrid(props)
         if (!initialized.current) 
         {
             initialized.current = true;
-            getUserMarketItems()
+            getUserMarketItems(address)
                 .then(items => {
                     return Promise.all(items.map(item => {
                         return axios.get(item.tokenURI)

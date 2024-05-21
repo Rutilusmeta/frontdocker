@@ -4,12 +4,12 @@ import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
-import { useAuthCore, useConnect } from '@particle-network/auth-core-modal';
-
+//import { useAuthCore, useConnect } from '@particle-network/auth-core-modal';
+import { useAccount, useConnectModal } from '@particle-network/connectkit'
 export default function BecomeCreator() {
 
-    const { userInfo } = useAuthCore();
-    const { connect } = useConnect();
+    const connectModal = useConnectModal();
+    const account = useAccount();
 
     const handleChange = () => 
     {
@@ -25,9 +25,9 @@ export default function BecomeCreator() {
     {
         try 
         {
-            if (!userInfo) 
+            if (!account) 
             {
-                await connect({});
+                connectModal.openConnectModal();
             }
         } 
         catch (error) 
@@ -56,13 +56,13 @@ export default function BecomeCreator() {
     };
     
     // quick fix when user is logged in
-    useEffect(() => 
+    /*useEffect(() => 
     {
-        if (userInfo)
+        if (account)
         {
             window.location.href = "/";
         }
-    });
+    });*/
 
     return (
         <>
@@ -82,7 +82,7 @@ export default function BecomeCreator() {
                             <p className="text-slate-400 mt-4 text-lg">We are a huge marketplace dedicated to connecting great artists of all giglink with their fans and unique token collectors!</p>
                         
                             <p className="text-slate-400 mt-4 text-lg">
-                                <button id="submit" name="send" onClick={() => handleLogin()} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full justify-center flex items-center">Create your account</button>         
+                                <button id="submit" name="send" onClick={() => handleLogin()} className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full justify-center flex items-center">Become a creator</button>         
                             </p>
                         </div>
                     </div>
