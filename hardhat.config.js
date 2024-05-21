@@ -17,6 +17,9 @@ module.exports =
       url: process.env.REACT_APP_CHAIN_ADDRESS_DEV.
                           replace('ws://', 'http://').
                           replace('wss://', 'https://'),
+      commissionReceiver: "0x4F64fB255bbcb5bdCaad873a5e56EC270B1684b1",
+      commissionPercentage: 1,
+      init: false
       //allowUnlimitedContractSize: true
       // accounts: [privateKey1, privateKey2, ...]
     }
