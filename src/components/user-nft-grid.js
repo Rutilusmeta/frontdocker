@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import axios from 'axios'; // Import axios for HTTP requests
+import { Circles } from 'react-loader-spinner';
+import axios from 'axios';
 import misc from "../constants/misc"
-import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "../assets/icons/vander";
+import { MdKeyboardArrowLeft } from "../assets/icons/vander";
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
-import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
 import { useAccount, useConnectModal } from '@particle-network/connectkit'
 export default function UserNftGrid(props) 
 {
@@ -21,39 +21,12 @@ export default function UserNftGrid(props)
     const [itemPrice, setItemPrice] = useState(null);
     const { title, description, pagination } = props;
     const { formatPrice, getUserMarketItems, changeItemStateAndPrice } = useNFTMarketplace();
-    const { userInfo } = useAuthCore();
-    const { connect } = useConnect();
     const [loading, setLoading] = useState(false);
+    const [isGridLoading, setisGridLoading] = useState(true);
     const initialized = useRef(false);
 
     const handleListItemClick = async (item, index) => 
     {
-        /*try 
-        {
-            if (!userInfo) 
-            {
-                await connect({});
-            }
-        } 
-        catch (error) 
-        {
-            if (error.code === 4011) 
-            {
-                console.log("User canceled the operation");
-            } 
-            else 
-            {
-                console.error("Error:", error); 
-            }
-            return;
-        }
-        setTokenID(item.tokenId);
-        setItemTitle(item.name);
-        setItemPrice(item.etherPrice);
-        setItemState(item.state);
-        setItemIndex(index);
-        setLoading(false);
-        setDialogOpen(true);*/
         if (!account)
         {
             connectModal.openConnectModal();
@@ -86,8 +59,7 @@ export default function UserNftGrid(props)
                     return;
                 }
             }
-            //console.log(tokenID, price, state);
-            await changeItemStateAndPrice(tokenID, price, state/*, userInfo*/);
+            await changeItemStateAndPrice(tokenID, price, state);
             updateItemStateAndPriceAtIndex(itemIndex, price, state);
             setDialogOpen(false);
             setLoading(false);
@@ -101,13 +73,13 @@ export default function UserNftGrid(props)
 
     const updateItemStateAndPriceAtIndex = (index, newPrice, newState) => {
         setMarketItems(prevItems => {
-          const updatedItems = [...prevItems]; // Create a copy of the previous items array
+          const updatedItems = [...prevItems];
           updatedItems[index] = {
-            ...updatedItems[index], // Copy the item at the specified index
-            state: newState, // Update the state of the item
-            etherPrice: newPrice, // Update the price of the item
+            ...updatedItems[index],
+            state: newState,
+            etherPrice: newPrice,
           };
-          return updatedItems; // Set the state with the updated items array
+          return updatedItems;
         });
       };
 
@@ -135,6 +107,7 @@ export default function UserNftGrid(props)
                     }));
                 })
                 .then(updatedItems => {
+                    setisGridLoading(false);
                     setMarketItems(updatedItems);
                 })
                 .catch(error => {
@@ -151,7 +124,11 @@ export default function UserNftGrid(props)
                     <h3 className="mb-4 md:text-3xl text-2xl md:leading-snug leading-snug font-semibold">{title}</h3>
                     <p className="text-slate-400 max-w-xl mx-auto">{description}</p>
                 </div>
-
+                {isGridLoading && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
+                        <Circles color="#00BFFF" height={80} width={80} />
+                    </div>
+                )}
                 {marketItems.length === 0 ? (
                     <p style={{ textAlign: 'center' }}>&nbsp;</p>
                 ) : (
@@ -213,7 +190,7 @@ export default function UserNftGrid(props)
                                     <button
                                         onClick={handleChangeItemStateAndPrice}
                                         className="btn bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white rounded-full justify-center flex items-center"
-                                        disabled={loading} // Disable the button while loading
+                                        disabled={loading}
                                     >
                                         {loading ? 'Submitting...' : 'Submit'}
                                     </button>

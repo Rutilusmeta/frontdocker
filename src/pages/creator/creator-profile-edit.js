@@ -1,22 +1,29 @@
-import React, { useContext, useState, useEffect } from 'react'
-import Navbar from '../../components/navbar'
-import Footer from '../../components/footer'
+import React, { useContext, useState, useEffect, useCallback } from 'react';
+//import { useNavigate } from 'react-router-dom';
+import Navbar from '../../components/navbar';
+import Footer from '../../components/footer';
 import Switcher from '../../components/switcher';
-import { Link } from 'react-router-dom';
+import { Circles } from 'react-loader-spinner';
+//import { Link } from 'react-router-dom';
 import UserContext from '../../contexts/UserContext';
+import { useConnectModal } from '@particle-network/connectkit';
 import { useAuthCore } from '@particle-network/auth-core-modal';
 import axios from 'axios';
+import _ from 'lodash';
 
 export default function CreatorProfileEdit() {
 
-    const { userInfo } = useAuthCore();
-    const { userData, saveUserData } = useContext(UserContext);
+    const MIN_ART_NAME_LENGTH = 5; // Minimum character value
+    const MAX_ART_NAME_LENGTH = 30; // Maximum character value
+    //const { userInfo } = useAuthCore();
+    const { userData, saveUserData, getUserAvatar, checkUserArtName, isUserAuthenticated } = useContext(UserContext);
     const [formData, setFormData] = useState({
-        firstname: '',
-        lastname: '',
-        email: '',
-        phone: '',
-        description: '',
+        //firstname: '',
+        //lastname: '',
+        //email: '',
+        //phone: '',
+        //description: '',
+        art_name: ''
     });
     const [phoneError, setPhoneError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -24,136 +31,205 @@ export default function CreatorProfileEdit() {
     const [errorMessage, setErrorMessage] = useState(false);
     const [avatar, setAvatar] = useState(false);
     const [imageSrc, setImageSrc] = useState(null);
+    const connectModal = useConnectModal();
 
-    useEffect(() => 
-    {
-        if (userData) 
-        {
+    useEffect(() => {
+
+        if (userData) {
+            const avatar = getUserAvatar(userData);
             setFormData({
-                firstname: userData.firstname || '',
-                lastname: userData.lastname || '',
-                email: userData.email || '',
-                phone: userData.phone || '',
-                description: userData.description || '',
-                avatar: userData.avatar || ''
+                art_name: userData.art_name || '',
+                avatar: avatar || ''
             });
-            if (userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
-            {
-                setImageSrc(userData.avatar); 
-            }
-            else if (userData.avatar)
-            {
-                setImageSrc(`/avatar/${userData.avatar}`); 
-            }
-        }
-        else
-        {
+            setImageSrc(avatar); 
+        } else {
             setImageSrc(`/avatar/1.jpg`); 
         }
-    }, [userData]);
 
-    if (!userData) {
-        // Handle the case where userData is not available yet
-        return <div>Loading...</div>; // or some other loading indicator
-    }
+    }, [userData, getUserAvatar, setImageSrc, setFormData]);
 
-    const handleInputChange = (e) => 
-    {
+    const debouncedCheckArtNameExists = useCallback(
+
+        _.debounce(async (artName) => {
+
+                setIsLoading(true);
+                const response = await checkUserArtName(userData.jwt_data, artName, userData.address);
+
+                if (response && response.data.code === 602) {
+                    alert('Art name already exists. Please choose a different name.');
+                } else {
+                    setIsLoading(false);
+                }
+
+        }, 1000), 
+        [userData.jwt_data.token]
+    );
+
+    const handleInputChange = (e) => {
+
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+    
+        if (name === 'art_name' && value.length >= MIN_ART_NAME_LENGTH && value.length <= MAX_ART_NAME_LENGTH) {
+            debouncedCheckArtNameExists(value);
+            setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+        } else {
+            setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+        }
+
+    };
+
+    const handleMouseDown = (e) => {
+
+        const { name } = e.target;
+
+        /*if (name === 'art_name') {
+            e.preventDefault();
+        }*/
+    };
+
+    const handleKeyDown = (e) => {
+
+        const { name, value } = e.target;
+    
+        if (name === 'art_name') {
+            const currentLength = value.length;
+            const newChar = e.key;
+
+            if ((e.ctrlKey || e.metaKey) && newChar === 'a') {
+                e.preventDefault();
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && newChar === 'x') {
+                e.preventDefault();
+                return;
+            }
+
+            const validChars = /^[a-zA-Z0-9_]+$/;
+            if (!newChar.match(validChars) && newChar !== 'Backspace') {
+                alert("Allowed characters are numbers, letters and underscore.");
+                e.preventDefault();
+                return;
+            }
+    
+            if (currentLength >= MAX_ART_NAME_LENGTH && newChar !== 'Backspace') {
+                e.preventDefault();
+            }
+    
+            if (currentLength <= MIN_ART_NAME_LENGTH && newChar === 'Backspace') {
+                e.preventDefault();
+            }
+        }
+
     };
 
     const validatePhone = () => {
+
         const isValid = /^\+\d{1,3}\d{9}$/.test(formData.phone);
         setPhoneError(isValid ? '' : 'Please enter a valid phone number');
         return isValid;
     };
 
-    const handleSaveUserData = async (userInfo, formData, avatar) => 
-    {
+    const handleSaveUserData = async (formData) => {
+
         try {
-            const saved = await saveUserData(userInfo, formData);
+            const saved = await saveUserData(userData.jwt_data, userData.address, formData);
+
             if (saved) {
                 setSuccessMessage('Profile updated successfully!');
                 setAvatar(false);
             } else {
                 setErrorMessage('Failed to update profile. Please try again.');
             }
+
             console.log('Form submitted successfully:', formData, saved);
+
         } catch (error) {
             console.error('Error submitting form:', error);
             setErrorMessage('Failed to update profile. Please try again.');
         }
     };
 
-    const handleSubmit = async (e) => 
-    {
+    const handleSubmit = async (e) => {
+
         setSuccessMessage('');
         setErrorMessage('');
         e.preventDefault();
-        if (formData.phone !== '' && !validatePhone()) 
-        {
+
+        /*if (formData.phone !== '' && !validatePhone()) {
             alert('Please enter a valid phone number. The format should be:' +
                 ' +[country code][area code][subscriber number], for example: +15551234567');
             return;
-        }
-        try 
-        {
+        }*/
+
+        try {
             setIsLoading(true);
-            console.log("handleSubmit", formData, avatar);
-            if (avatar)
-            {
-                fetch(avatar)
-                .then(response => response.blob())
-                .then(blob => {
-                    const avatarForm = new FormData();
-                    avatarForm.append('file', blob);
-                    return axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, avatarForm, {
-                    auth: {
-                        username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
-                        password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
-                    },
-                    });
-                })
-                .then(response => {
-                   // console.log('Image uploaded successfully:', response.data);
-                    const newAvatarUrl = response.data.fastUrl || '';
-                    /*setFormData(prevFormData => ({
-                        ...prevFormData,
-                        avatar: newAvatarUrl
-                    }));*/ // it is not working
-                    formData.avatar = newAvatarUrl;
-                    handleSaveUserData(userInfo, formData, avatar);
-                    setIsLoading(false);
-                })
-                .catch(error => {
-                    console.error('Error uploading image:', error);
-                    setIsLoading(false);
-                });
-            }
-            else
-            {
-                await handleSaveUserData(userInfo, formData, avatar);
-                setIsLoading(false);
-            }
-        } 
-        catch (error) 
-        {
-            console.error('Error submitting form:', error);
+            if (avatar) {
+                const response = await fetch(avatar);
+                const blob = await response.blob();
+                const avatarForm = new FormData();
+                avatarForm.append('file', blob);
+                const uploadResponse = await axios.post(
+                    process.env.REACT_APP_IPFS_IMAGE_URL,
+                    avatarForm,
+                    {
+                        auth: {
+                            username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
+                            password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
+                        },
+                    }
+                );
+                const newAvatarUrl = uploadResponse.data.fastUrl || '';
+                formData.avatar = newAvatarUrl;
+            } 
+            await handleSaveUserData(formData);
+            setIsLoading(false);
+
+        } catch (error) {
+            console.error('Error:', error);
             setIsLoading(false);
         }
     };
+
     const loadFile = (event) => {
+
+        setSuccessMessage('');
+        setErrorMessage('');
         const selectedFile = event.target.files[0];
+
         if (selectedFile.type.startsWith('image/')) {
             const image = document.getElementById(event.target.name);
             image.src = URL.createObjectURL(selectedFile);
             setAvatar(image.src);
         } else {
-            console.error('Invalid file type. Please select an image file.');
             alert('Invalid file type. Please select an image file');
         }
+
     };
+
+    useEffect(() => {
+
+        if (!isUserAuthenticated) {
+            const timeout = setTimeout(() => {
+                connectModal.openConnectModal();
+            }, 15000);
+
+            return () => clearTimeout(timeout); // Cleanup the timeout if the component unmounts
+        }
+    }, [isUserAuthenticated, connectModal]);
+
+    if (!isUserAuthenticated) {
+        return (
+            <>  
+                <Navbar />
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                    <Circles color="#00BFFF" height={80} width={80} />
+                </div>
+                <Footer />
+                <Switcher />
+            </>
+        );
+    }
 
     return (
         <>
@@ -204,8 +280,25 @@ export default function CreatorProfileEdit() {
                             <div className="p-6 rounded-md shadow dark:shadow-gray-800 bg-white dark:bg-slate-900">
                                 <h5 className="text-lg font-semibold mb-4">Personal Detail :</h5>
                                 <form onSubmit={handleSubmit}>
-                                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">
+                                   <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">
                                         <div>
+                                            <label className="form-label font-medium">
+                                                Art Name : <span className="text-red-600">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2"
+                                                placeholder={`Art Name: (min ${MIN_ART_NAME_LENGTH}, max ${MAX_ART_NAME_LENGTH} characters)`}
+                                                id="art_name"
+                                                name="art_name"
+                                                value={formData.art_name || ''}
+                                                onChange={handleInputChange}
+                                                onKeyDown={handleKeyDown}
+                                                onMouseDown={handleMouseDown}
+                                                maxLength={MAX_ART_NAME_LENGTH}
+                                            />
+                                        </div>
+                                        {/*<div>
                                             <label className="form-label font-medium">First Name : <span className="text-red-600">*</span></label>
                                             <input
                                                 type="text"
@@ -217,7 +310,7 @@ export default function CreatorProfileEdit() {
                                                 defaultValue={userData.firstname || ''}
                                             />
                                         </div>
-                                        <div>
+                                       <div>
                                             <label className="form-label font-medium">Last Name : <span className="text-red-600">*</span></label>
                                             <input type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Last Name:" id="lastname" name="lastname" defaultValue={userData.lastname || ''} onChange={handleInputChange}/>
                                         </div>
@@ -228,17 +321,17 @@ export default function CreatorProfileEdit() {
                                         <div>
                                             <label className="form-label font-medium">Phone : </label>
                                             <input name="phone" id="phone" type="text" className="form-input w-full text-[15px] py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-full outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Phone :" defaultValue={userData.phone || ''} onChange={handleInputChange}/>
-                                        </div>
+                                        </div>*/}
                                     </div>
 
-                                    <div className="grid grid-cols-1">
+                                    {/*<div className="grid grid-cols-1">
                                         <div className="mt-5">
                                             <label className="form-label font-medium">Description : </label>
                                             <textarea name="description" id="description" className="form-input w-full text-[15px] py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded-2xl outline-none border border-gray-200 focus:border-violet-600 dark:border-gray-800 dark:focus:border-violet-600 focus:ring-0 mt-2" placeholder="Message :" defaultValue={userData.description || ''} onChange={handleInputChange}></textarea>
                                         </div>
-                                    </div>
+                                    </div>*/}
 
-                                     {/* Success message */}
+                                    {/* Success message */}
                                     {successMessage && <div className="text-green-600">{successMessage}</div>}
                                     {/* Error message */}
                                     {errorMessage && <div className="text-red-600">{errorMessage}</div>}

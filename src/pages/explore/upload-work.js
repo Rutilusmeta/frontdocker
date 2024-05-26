@@ -1,21 +1,22 @@
 import React, { useEffect, useState, useContext, useRef } from 'react'
-//import image from '../../assets/images/avatar/1.jpg';
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
 import { Link } from 'react-router-dom';
+import { Circles } from 'react-loader-spinner';
 import urls from '../../constants/urls';
-import {AiOutlineDashboard, PiBrowsers, AiOutlineSetting, IoMdLogOut} from "../../assets/icons/vander"
+import { AiOutlineDashboard, PiBrowsers } from "../../assets/icons/vander"
 import FormData from "form-data";
 import axios from "axios";
-//import { useAuthCore } from '@particle-network/auth-core-modal';
-import { useAccount, useConnectModal } from '@particle-network/connectkit'
+import { useConnectModal } from '@particle-network/connectkit'
 import UserContext from '../../contexts/UserContext';
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
 
 export default function UploadWork() 
 {
-    const { createMarketItem, getAccounts } = useNFTMarketplace();
+    const { createMarketItem } = useNFTMarketplace();
+    const { userData, getUserAvatar, isUserAuthenticated } = useContext(UserContext);
+    const connectModal = useConnectModal();
     const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
     const [imageSrc, setImageSrc] = useState(null);
@@ -23,125 +24,120 @@ export default function UploadWork()
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
-    //const { userInfo } = useAuthCore();
-    const { userData, getUserAvatar } = useContext(UserContext);
-    const connectModal = useConnectModal();
-    const account = useAccount();
+    const [failedMessage, setFailedMessage] = useState('');
     const initialized = useRef(false);
 
-    const createNFTForm = async (event) => 
-    {
-        if (!account){
+    const createNFTForm = async (event) => {
+
+        if (!isUserAuthenticated) {
             connectModal.openConnectModal();
             return;
         }
+
         setSuccessMessage('');
+        setFailedMessage('');
         event.preventDefault();
-		if (imageURI === "") 
-        {
+
+		if (imageURI === "") {
 			alert("Please upload an image");
 			return false;
-		} 
-        else if (title === "") 
-        {
+		} else if (title === "") {
 			alert("Please add a title");
 			return false;
 		}
-        setSubmitting(true);
-        setLoading(true);
+
         const created = await mintNFT();
-        setSubmitting(false);
-        //setLoading(false);
-        if (created)
-        {
-            setSuccessMessage(`NFT created successfully, go to <a href="${urls.user_nfts}/${account}" style="color: blue;">my nft page</a> to view it.`);
+
+        if (created) {
+            setSuccessMessage(true);
+            setFailedMessage(false);
+        } else {
+            setSuccessMessage(false);
+            setFailedMessage(true);
         }
-        else
-        {
-            setSuccessMessage('Failed to create NFT.');
-        }
+
         return true;
     }
 
-    const mintNFT = async () => 
-    {
-        if (!account){
+    const mintNFT = async () => {
+
+        if (!isUserAuthenticated){
             connectModal.openConnectModal();
             return;
         }
-        try
-        {
-            const jsonData = 
-            {
+
+        try{
+            setSubmitting(true);
+            setLoading(true);
+            const jsonData = {
                 name: title,
                 description: description,
                 image: imageURI
             };
-            //console.log("jsonData",jsonData);
-            let res = await axios.post(process.env.REACT_APP_IPFS_JSON_URL, jsonData, 
-            {
-                auth: 
-                {
+            let res = await axios.post(process.env.REACT_APP_IPFS_JSON_URL, jsonData, {
+                auth: {
                     username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
                     password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
                 }
             });
             const tokenURI = res.data.fastUrl;
-            //const accounts = await getAccounts();
-            return await createMarketItem(tokenURI, 0);
-        }
-        catch (error) 
-        {
+            const item = await createMarketItem(tokenURI, 0);
+            setSubmitting(false);
+            setLoading(false);
+            return item;
+
+        } catch (error) {
             console.error("Error creating market item", error);
         }
 	};
 
-    useEffect(() => 
-    {
+    useEffect(() => {
+
+        setFailedMessage('');
+        setSuccessMessage('');
         document.documentElement.classList.add('dark');
-        if (userData && !initialized.current) 
-        {
+
+        if (userData && !initialized.current) {
             initialized.current = true;
             const avatar = getUserAvatar(userData);
             setImageSrc(avatar); 
-            //console.log(userData);
         }
-    }, [getUserAvatar, userData]);
 
-    const handleChange = async () => 
-    {
-        if (!account){
+    }, [getUserAvatar, userData, setImageSrc]);
+
+    const handleChange = async () => {
+
+        if (!isUserAuthenticated){
             connectModal.openConnectModal();
             return;
         }
+
 		const fileUploader = document.querySelector("#input-file");
 		const getFile = fileUploader.files;
+
 		if (getFile.length !== 0) {
 			const uploadedFile = getFile[0];
 			await readFile(uploadedFile);
 		}
+
 	};
 
-    const readFile = async (uploadedFile) => 
-    {
-        if (uploadedFile) 
-        {
+    const readFile = async (uploadedFile) => {
+
+        if (uploadedFile) {
             setLoading(true);
             try{
                 const formData = new FormData();
                 formData.append("file", uploadedFile);
                 const reader = new FileReader();
-                let res = await axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, formData, 
-                {
-                    auth: 
-                    {
+                let res = await axios.post(process.env.REACT_APP_IPFS_IMAGE_URL, formData, {
+                    auth: {
                         username: process.env.REACT_APP_PARTICLE_PROJECT_ID,
                         password: process.env.REACT_APP_PARTICLE_CLIENT_KEY,
                     },
                 });
                 setImageURI(res.data.fastUrl);
-                reader.onload = () => 
-                {
+                reader.onload = () => {
                     const parent = document.querySelector('.preview-box');
                     parent.innerHTML = `<img class="preview-content" src=${reader.result} />`;
                 };
@@ -154,7 +150,32 @@ export default function UploadWork()
                 setLoading(false); // Set loading to false after file upload completes
             }
         }
+
     };
+
+    useEffect(() => {
+
+        if (!isUserAuthenticated) {
+            const timeout = setTimeout(() => {
+                connectModal.openConnectModal();
+            }, 15000);
+
+            return () => clearTimeout(timeout); // Cleanup the timeout if the component unmounts
+        }
+    }, [isUserAuthenticated, connectModal]);
+
+    if (!isUserAuthenticated) {
+        return (
+            <>  
+                <Navbar />
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                    <Circles color="#00BFFF" height={80} width={80} />
+                </div>
+                <Footer />
+                <Switcher />
+            </>
+        );
+    }
 
     return (
         <>
@@ -199,7 +220,7 @@ export default function UploadWork()
                                         </div>
 
                                         <ul className="list-none sidebar-nav mb-0 mt-3" id="navmenu-nav">
-                                            {account && (
+                                            {userData.address && (
                                                 <li className="navbar-item account-menu text-[16px]">
                                                     <Link to={`/creator-profile/${userData.address}`} className="navbar-link text-slate-400 flex items-center py-2 rounded">
                                                         <span className="me-2 mb-0"><AiOutlineDashboard/></span>
@@ -286,7 +307,15 @@ export default function UploadWork()
                                                 <div className="col-span-12">
                                                     <button type="submit" onClick={createNFTForm} disabled={loading} className={`btn bg-violet-600 ${loading ? 'disabled' : 'hover:bg-violet-700'} border-violet-600 ${loading ? 'disabled' : 'hover:border-violet-700'} text-white rounded-full`}>{submitting ? 'Submitting...' : 'Create Item'}</button>
                                                     {successMessage && (
-                                                        <div dangerouslySetInnerHTML={{ __html: successMessage }} />
+                                                        <div style={{ marginTop: '20px' }}>
+                                                            NFT created successfully, go to{' '}
+                                                            <Link to={`${urls.user_nfts}/${userData.address}`} style={{ color: 'blue' }}>my nft page</Link> to view it.
+                                                        </div>
+                                                    )}
+                                                    {failedMessage && (
+                                                        <div style={{ marginTop: '20px' }}>
+                                                           Failed to create NFT, please try again or contact support.
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>

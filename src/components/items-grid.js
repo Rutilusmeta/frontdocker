@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useContext } from 'react'
 import { Link } from 'react-router-dom';
+import { Circles } from 'react-loader-spinner';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from '../assets/icons/vander'
 import misc from "../constants/misc";
 import urls from '../constants/urls';
-import axios from 'axios'; // Import axios for HTTP requests
+import axios from 'axios';
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
 import UserContext from '../contexts/UserContext';
 
@@ -11,7 +12,8 @@ export default function ItemsGrid(props) {
 
     const { title, description, pagination, address, addresses} = props;
     const [marketItems, setMarketItems] = useState([]);
-    const [noData, setNoData] = useState(false);
+    //const [noData, setNoData] = useState(false);
+    const [loading, setLoading] = useState(true);
     const { getMarketItems, getUserMarketItems, formatPrice } = useNFTMarketplace();
     const { getUserAvatar } = useContext(UserContext);
     const initialized = useRef(false);
@@ -20,7 +22,7 @@ export default function ItemsGrid(props) {
     {
         const fetchMarketItems = async (items) => 
         {
-            setNoData(false);
+            //setNoData(false);
             try 
             {
                 const updatedItems = await Promise.all(items.map(async (item) => 
@@ -63,6 +65,7 @@ export default function ItemsGrid(props) {
                         };*/
                     }
                 }));
+                setLoading(false);
                 setMarketItems(prevItems => [...prevItems, ...updatedItems]);
             } catch (error) {
                 console.error('Error fetching market items:', error);
@@ -110,6 +113,11 @@ export default function ItemsGrid(props) {
                         </div>
                     ) : ('')
                 }
+                {loading ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '30vh' }}>
+                        <Circles color="#00BFFF" height={80} width={80} />
+                    </div>
+                ) : ('')}
                 {marketItems.length === 0 ? (
                     <p style={{ textAlign: 'center' }}>&nbsp;</p>
                 ) : (

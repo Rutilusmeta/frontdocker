@@ -1,8 +1,6 @@
-// BoxContext.js
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import Web3 from 'web3';
 import NFTMarketplacArtifactJson from '../contracts/abi/contracts/NFTMarketplace.sol/NFTMarketplace.json';
-import axios from 'axios';
 
 const ABI = NFTMarketplacArtifactJson.abi;
 
@@ -15,6 +13,12 @@ const BigNumber = require('bignumber.js');
 export const NFTMarketplaceContextProvider = ({ children }) => 
 {
     let providerAddress;
+    let contractAddress;
+    let decimalNumber;
+    let hexString;
+    let customChainId;
+    let customNetwork;
+    const [provider, setProvider] = useState(null);
 
     switch (process.env.REACT_APP_CHAIN_ENV) 
     {
@@ -28,20 +32,40 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_PROD;
             break;
         default:
-            // Default to dev environment if REACT_APP_NETWORK is not set or unrecognized
             providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
             break;
     }
+
+    switch (process.env.REACT_APP_CHAIN_ENV) 
+    {
+        case 'dev':
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_DEV;
+            break;
+        case 'testing':
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_TESTING;
+            break;
+        case 'prod':
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_PROD;
+            break;
+        default:
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_DEV;
+            break;
+    }
+
+    const updateProvider = (newProvider) => 
+    {
+        console.log("Updating provider", newProvider);
+        setProvider(newProvider);
+    };
  
     const getMarketItems = async () =>
     {
         try 
         {
             const web3 = new Web3(providerAddress);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const contract = new web3.eth.Contract(ABI, contractAddress);
             const records = await contract.methods.getActiveMarketItems().call();
             const filteredRecords = records.filter(record => record.state === 0n);
-            //console.log("NFTMarketContext::getActiveMarketItems: ", filteredRecords);
             return filteredRecords;
         } 
         catch (error) 
@@ -56,14 +80,13 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         try 
         {
             const accounts = await connectWallet();
-            const web3 = new Web3(window.ethereum);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const web3 = new Web3(provider);
+            const contract = new web3.eth.Contract(ABI, contractAddress);
             const tx = await contract.methods.purchaseMarketItem(tokenId).send
             ({
                 from: accounts[0],
-                value: web3.utils.toWei(price.toString(), 'ether') // Convert price to Wei
+                value: web3.utils.toWei(price.toString(), 'ether')
             });
-            //console.log("buyMarketItem:purchaseketItem", tx);
             return tx;
         }
         catch (error) 
@@ -78,9 +101,8 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         try 
         {
             const web3 = new Web3(providerAddress);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const contract = new web3.eth.Contract(ABI, contractAddress);
             const record = await contract.methods.getActiveMarketItem(tokenId).call();
-            //console.log("NFTMarketContext::getActiveMarketItems: ", tokenId, record);
             return record;
         }
         catch (error) 
@@ -89,18 +111,17 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             return null;
         }
      };
+    
     const getUserMarketItems = async (address, state = null) => 
-    //const getUserMarketItems = async (address = null, state = null) => 
     {
         try 
         {
             //const accounts = (address) ? [address] : await connectWallet();
-            const accounts = [address];
             //const web3 = new Web3(window.ethereum);
+            const accounts = [address];
             const web3 = new Web3(providerAddress);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const contract = new web3.eth.Contract(ABI, contractAddress);
             const records = await contract.methods.getMarketItemsBySeller(accounts[0]).call();
-            //console.log("NFTMarketContext::getMarketItemsBySeller: ", records);
             if (state !== null)
             {
                 const filteredRecords = records.filter(record => record.state === state);
@@ -117,13 +138,12 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
 
     const formatPrice = (price) =>
     {
-        const etherPerWei = new BigNumber(10).pow(18); // 1 Ether = 10^18 Wei
+        const etherPerWei = new BigNumber(10).pow(18);
         const priceInEther = new BigNumber(price).div(etherPerWei);
         return priceInEther.toString();
     }
 
     const changeItemStateAndPrice = async (tokenId, price, state) => 
-    //const changeItemStateAndPrice = async (tokenId, price, state, userInfo) => 
     {
         try 
         {
@@ -132,26 +152,10 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
             {
                 throw new Error("Price must be greater than 0");
             }
-            const web3 = new Web3(window.ethereum);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const web3 = new Web3(provider);
+            const contract = new web3.eth.Contract(ABI, contractAddress);
             const priceInWei = web3.utils.toWei(price.toString(), "ether");
             const transaction = await contract.methods.changeItemStateAndPrice(tokenId, priceInWei, state).send({ from: accounts[0] });
-            //console.log("changeItemStateAndPrice: ", tokenId, price, state, transaction);
-            /*if (state === 0n)
-            {
-                const headers = 
-                {
-                    'Authorization': userInfo.token,
-                    'UUID': userInfo.uuid
-                };
-                const data =
-                {
-                    nft_id: parseInt(tokenId),
-                    address: accounts[0],
-                }
-                let res = await axios.post(process.env.REACT_APP_API_ADDRESS + '/listing/', data, { headers: headers });
-                console.log(res);
-            }*/
             return transaction;
         } 
         catch (error) 
@@ -165,10 +169,9 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         try 
         {
             const accounts = await connectWallet();
-            const web3 = new Web3(window.ethereum);
-            const contract = new web3.eth.Contract(ABI, process.env.REACT_APP_CONTRACT_PROXY_ADDRESS);
+            const web3 = new Web3(provider);
+            const contract = new web3.eth.Contract(ABI, contractAddress);
             const transaction = await contract.methods.createToken(tokenURI, price).send({ from: accounts[0] });
-            //console.log("Market item created successfully: ", transaction);
             return transaction;
         } 
         catch (error) 
@@ -178,51 +181,60 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         }
     };
 
-    const connectWallet = async () => 
-    {
-        switch (process.env.REACT_APP_CHAIN_ENV) 
-        {
+    const connectWallet = async () => {
+
+        switch (process.env.REACT_APP_CHAIN_ENV) {
             case 'dev':
-                const decimalNumber = parseInt(process.env.REACT_APP_CHAIN_ID_DEV);
-                const hexString = decimalNumber.toString(16); // Convert to hexadecimal
-                const customChainId = '0x' + hexString; // Add '0x' prefix
-                //console.log("customChainId",decimalNumber,hexString,customChainId);
-                const customNetwork = 
-                {
+                decimalNumber = parseInt(process.env.REACT_APP_CHAIN_ID_DEV);
+                hexString = decimalNumber.toString(16);
+                customChainId = '0x' + hexString;
+                customNetwork = {
                     chainId: customChainId,
                     chainName: 'GANACHE SERVER TEST',
-                    nativeCurrency: 
-                    {
+                    nativeCurrency: {
                         name: 'ETH',
                         symbol: 'ETH',
                         decimals: 18,
                     },
-                    rpcUrls: 
-                    [
+                    rpcUrls: [
                         process.env.REACT_APP_CHAIN_ADDRESS_DEV
                             .replace('ws://', 'http://').replace('wss://', 'https://')
                     ],
                     //blockExplorerUrls: ['https://custom-block-explorer-url.com']
                 };
-                await window.ethereum.request({
+                await provider.request({
                     method: "wallet_addEthereumChain",
                     params: [customNetwork]
                 });
-                await window.ethereum.request({
+                await provider.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: customChainId }]
                 });
                 break;
-            //case 'testing':
-            //    break;
-            //case 'prod':
-            //    break;
+            case 'testing':
+                decimalNumber = parseInt(process.env.REACT_APP_CHAIN_ID_TESTING);
+                hexString = decimalNumber.toString(16);
+                customChainId = '0x' + hexString;
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: customChainId }]
+                });
+                break;
+            case 'prod':
+                decimalNumber = parseInt(process.env.REACT_APP_CHAIN_ID_PROD);
+                hexString = decimalNumber.toString(16);
+                customChainId = '0x' + hexString;
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: customChainId }]
+                });
+                break;
             default:
                 // Default to dev environment if REACT_APP_NETWORK is not set or unrecognized
                //providerAddress = process.env.REACT_APP_CHAIN_ADDRESS_DEV;
                 break;
         }
-        return await window.ethereum.request({ method: 'eth_requestAccounts' });
+        return await provider.request({ method: 'eth_requestAccounts' });
     }
     const getAccounts = async () => 
     {
@@ -243,13 +255,11 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
         try 
         {
             await connectWallet();
-            const web3 = new Web3(window.ethereum);
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const web3 = new Web3(provider);
+            await provider.request({ method: 'eth_requestAccounts' });
             const balance = await web3.eth.getBalance(address);
             const balanceInEther = web3.utils.fromWei(balance, 'ether');
-            //console.log('balanceInEther:', balanceInEther, 'ETH');
             const formattedBalance = parseFloat(balanceInEther).toFixed(4);
-            //console.log('Formated Balance:', formattedBalance, 'ETH');
             return formattedBalance;
         }
         catch (error) 
@@ -261,7 +271,7 @@ export const NFTMarketplaceContextProvider = ({ children }) =>
 
     return (
         <NFTMarketplaceContext.Provider value={{ formatPrice, buyMarketItem, getMarketItem, getMarketItems, 
-            changeItemStateAndPrice, getUserMarketItems, createMarketItem, getBalance, getAccounts, connectWallet }}>
+            changeItemStateAndPrice, getUserMarketItems, createMarketItem, getBalance, getAccounts, connectWallet, updateProvider }}>
             {children}
         </NFTMarketplaceContext.Provider>
     );

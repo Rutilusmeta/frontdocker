@@ -1,41 +1,55 @@
 import React, { useEffect, useState, useRef, useContext } from 'react'
 import { Link, useParams } from 'react-router-dom';
-import image from '../../assets/images/items/3.gif';
+import { Circles } from 'react-loader-spinner';
 import Navbar from '../../components/navbar'
 import Footer from '../../components/footer'
 import Switcher from '../../components/switcher';
-import { data } from '../../data/data';
 import {IoMdClose,BsExclamationOctagon} from "../../assets/icons/vander"
 import misc from "../../constants/misc";
 import urls from '../../constants/urls';
 import axios from 'axios'; // Import axios for HTTP requests
 import UserContext from '../../contexts/UserContext';
 import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
-import { useAccount, useConnectModal } from '@particle-network/connectkit'
+import { useConnectModal } from '@particle-network/connectkit'
 
 export default function ItemDetail() 
 {
     const params = useParams();
-    const id = params.id
-    const creater = data.find((creatorr) => creatorr.id === parseInt (id));
-
-    const [activeIndex, setIndex] = useState(0);
+    const id = params.id;
+    const { getMarketItem, formatPrice, buyMarketItem } = useNFTMarketplace();
+    const { userData, getUserAvatar, isUserAuthenticated } = useContext(UserContext);
     const [placeBid , setPlaceBid] = useState(false);
-    const [userDetails, setUserDetails] = useState(null);
-    const [itemSoldMsg, setItemSoldMsg] = useState('');
+    const [itemSoldMsg, setItemSoldMsg] = useState(false);
+    const [itemErrMsg, setItemErrMsg] = useState(false);
     const [buyNow, setBuyNow] = useState(false);
-    const { getMarketItem, formatPrice, buyMarketItem, connectWallet } = useNFTMarketplace();
-    const { getUserAvatar } = useContext(UserContext);
-    const initialized = useRef(false);
     const [marketItem, setMarketItem] = useState(false);
     const connectModal = useConnectModal();
-    const account = useAccount();
+    const [isItemLoading, setisItemLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const initialized = useRef(false);
 
-    useEffect(() => 
+    let contractAddress;
+
+    switch (process.env.REACT_APP_CHAIN_ENV) 
     {
+        case 'dev':
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_DEV;
+            break;
+        case 'testing':
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_TESTING;
+            break;
+        case 'prod':
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_PROD;
+            break;
+        default:
+            contractAddress = process.env.REACT_APP_CONTRACT_PROXY_ADDRESS_DEV;
+            break;
+    }
+
+    useEffect(() => {
+
         document.documentElement.classList.add('dark');
-        if (/*userInfo &&*/ !initialized.current) 
-        {
+        if (/*userInfo &&*/ !initialized.current) {
             initialized.current = true;
             getMarketItem(id)
                 .then(item => {
@@ -64,6 +78,7 @@ export default function ItemDetail()
                             updatedItem.avatar = avatar;
                             updatedItem.sid = sid;
                             updatedItem.avatar = getUserAvatar(updatedItem);
+                            setisItemLoading(false);
                             setMarketItem(updatedItem);
                         }).catch(error => {
                             console.error('Error fetching additional data:', error);
@@ -73,31 +88,41 @@ export default function ItemDetail()
                     console.error('Error fetching market item:', error);
                 });
         }
-    }, [getMarketItem]);
 
-    const buyMarketItemHandler = async (tokenId) => 
-    {
-        if (!account){
+    }, [getMarketItem, formatPrice, getUserAvatar, id]);
+
+    const buyMarketItemHandler = async (tokenId) => {
+
+        if (isLoading) {
+            return;
+        }
+
+        if (!isUserAuthenticated){
             connectModal.openConnectModal();
             return;
         }
-        setItemSoldMsg('');
-        //const accounts = await connectWallet();
-        if (marketItem.seller.toLowerCase() === account.toLowerCase())
-        {
+
+        setItemSoldMsg(false);
+        setItemErrMsg(false);
+
+        if (marketItem.seller.toLowerCase() === userData.address.toLowerCase()) {
             alert("You are already selling this item");
             return;
         }
-        try
-        {
+
+        try {
+            setIsLoading(true);
             const result = await buyMarketItem(tokenId, marketItem.etherPrice); 
-            if (result)
-            {
-                setItemSoldMsg(`Congratulations, you can view your item here: <a href="${urls.user_nfts}/${account}" style="color: blue;">my nft</a>.`);
+
+            if (result) {
+                setItemSoldMsg(true);
+            } else {
+                setItemErrMsg(true);
             }
-        }
-        catch (error) 
-        {
+
+            setIsLoading(false);
+
+        } catch (error) {
             console.error("Error creating market item", error);
         }
 	};
@@ -107,6 +132,11 @@ export default function ItemDetail()
             <Navbar />
             <section className="relative pt-28 md:pb-24 pb-16">
                 <div className="container">
+                {isItemLoading && (
+                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                     <Circles color="#00BFFF" height={80} width={80} />
+                 </div>
+                 )}   
                 {marketItem && (
                     <div className="grid lg:grid-cols-12 md:grid-cols-2 grid-cols-1 gap-[30px]">
                         <div className="lg:col-span-5">
@@ -115,7 +145,7 @@ export default function ItemDetail()
                             <div className="bg-gray-50 dark:bg-slate-800 rounded-md shadow dark:shadow-gray-800 mt-[30px] p-6">
                                 <div>
                                     <span className="font-medium text-slate-400 block mb-1">Contract Address</span>
-                                    <Link to="#" className="font-medium text-violet-600 underline block">{process.env.REACT_APP_CONTRACT_PROXY_ADDRESS}</Link>
+                                    <Link to="#" className="font-medium text-violet-600 underline block">{contractAddress}</Link>
                                 </div>
 
                                 <div className="mt-4">
@@ -151,9 +181,19 @@ export default function ItemDetail()
 
                             <div className="mt-6">
                                 {/*<Link to="#" onClick={()=> setPlaceBid(!placeBid)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"><i className="mdi mdi-gavel"></i> Bid Now</Link>*/}
-                                <Link to="#" onClick={() => buyMarketItemHandler(marketItem.tokenId)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white ms-1"><i className="mdi mdi-lightning-bolt"></i> Buy Now</Link>
+                                <Link to="#" onClick={() => buyMarketItemHandler(marketItem.tokenId)} className="btn rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white ms-1">
+                                    {isLoading ? 'Loading...' : <><i className="mdi mdi-lightning-bolt"></i> Buy Now</>}
+                                </Link>
                                 {itemSoldMsg && (
-                                    <div dangerouslySetInnerHTML={{ __html: itemSoldMsg }} />
+                                    <div style={{ marginTop: '20px' }}>
+                                        Congratulations, you can view your item here:{' '}
+                                        <Link to={`${urls.user_nfts}/${userData.address}`} style={{ color: 'blue' }}>my nft page</Link>
+                                  </div>
+                                )}
+                                 {itemErrMsg && (
+                                    <div style={{ marginTop: '20px' }}>
+                                        Error trying to buyt NFT, please try again or contact support
+                                    </div>
                                 )}
                             </div>
 

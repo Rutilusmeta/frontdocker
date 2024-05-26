@@ -1,23 +1,30 @@
 import React, { useEffect, useContext, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import { Link, useParams } from "react-router-dom";
 import UserNftGrid from '../../components/user-nft-grid';
 import UserContext from '../../contexts/UserContext';
-import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
+import { Circles } from 'react-loader-spinner';
+import { useConnectModal } from '@particle-network/connectkit';
+import urls from '../../constants/urls';
+//import { useNFTMarketplace } from '../../contexts/NFTMarketplaceContext';
 
 export default function ListNFT() {
 
-    const [price, setPrice] = useState("");
-	const [minimumBid, setMinimumBid] = useState("");
-	const [description, setDescription] = useState("");
-	const [nft, setNft] = useState(null);
+	const { userData, isUserAuthenticated } = useContext(UserContext);
+    //const [price, setPrice] = useState("");
+	//const [minimumBid, setMinimumBid] = useState("");
+	//const [description, setDescription] = useState("");
+	//const [nft, setNft] = useState(null);
 	const [days, setDays] = useState(0);
 	const [sellType, setSellType] = useState("Sell");
 	const [dayType, setDayType] = useState("1 Day");
     const params = useParams();
     const id = params.id;
+	const connectModal = useConnectModal();
+	const navigate = useNavigate();
 
     useEffect(() => {
 		document.documentElement.classList.add("dark");
@@ -49,6 +56,39 @@ export default function ListNFT() {
     /*const list = async () => {
         console.log("HERE");
     };*/
+
+	useEffect(() => {
+
+        if (!isUserAuthenticated) {
+            const timeout = setTimeout(() => {
+                connectModal.openConnectModal();
+            }, 15000);
+
+            return () => clearTimeout(timeout); // Cleanup the timeout if the component unmounts
+        }
+
+    }, [isUserAuthenticated]);
+
+	useEffect(() => {
+
+        if (isUserAuthenticated && userData.address !== id) {
+			navigate(urls.home);
+        }
+
+    }, [isUserAuthenticated]);
+
+    if (!isUserAuthenticated) {
+        return (
+            <>  
+                <Navbar />
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                    <Circles color="#00BFFF" height={80} width={80} />
+                </div>
+                <Footer />
+                <Switcher />
+            </>
+        );
+    }
 
     return (
 		<>

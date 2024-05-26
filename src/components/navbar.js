@@ -1,88 +1,82 @@
 import React, { useEffect, useState, useRef, useContext, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import { PiWalletBold, AiOutlineUser, LiaSignOutAltSolid, LuSettings } from "../assets/icons/vander"
 import logo_icon_28 from '../assets/images/logo-icon-28.png';
 import logo_dark from '../assets/images/logo-dark.png';
 import logo_white from '../assets/images/logo-white.png';
 import urls from '../constants/urls'
-import { Link } from "react-router-dom";
 import EnvDiv from './env-div';
-import { PiWalletBold/*, AiOutlineCopy*/, AiOutlineUser, LuSettings, LiaSignOutAltSolid } from "../assets/icons/vander"
-
-import { ConnectButton, useAccount, useConnectModal, useConnectId, useParticleConnect, useParticleProvider } from '@particle-network/connectkit'
-//import { useConnect, useAuthCore } from '@particle-network/auth-core-modal';
+import { ConnectButton, useAccount, useConnectModal, useParticleConnect, useParticleProvider } from '@particle-network/connectkit'
 import { useAuthCore } from '@particle-network/auth-core-modal';
-
 import UserContext from '../contexts/UserContext';
 import { useNFTMarketplace } from '../contexts/NFTMarketplaceContext';
-
-import axios from 'axios';
-import qs from 'querystring-es3';
 
 export default function Navbar() 
 {
     const account = useAccount();
     const provider = useParticleProvider();
-    const { disconnect, connectKit, connect, connected } = useParticleConnect();
+    const { disconnect, connectKit } = useParticleConnect();
+    const { userInfo } = useAuthCore();
     const connectModal = useConnectModal();
-    const connectID = useConnectId();
-
-    const { userData, clearUser, updateUser } = useContext(UserContext);
-    const { connectWallet, getBalance, getAccounts } = useNFTMarketplace();
-//    const { connect, disconnect } = useConnect();
-//    const { userInfo } = useAuthCore();
+    const { getBalance, getAccounts, updateProvider } = useNFTMarketplace();
+    const { userData, setIsUserAuthenticated, verifyWalletSignature, verifyParticleAuth, getUserAvatar } = useContext(UserContext);
     const [isDropdown, openDropdown] = useState(true);
     const [isOpen, setMenu] = useState(true);
-    const [imageSrc, setImageSrc] = useState(null);
-    const [userID, setUserID] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userAvatar, setUserAvatar] = useState(null);
+    const connectKITC = useRef(null);
     const [walletAddress, setWalletAddress] = useState('');
     const [addressBalance, setAddressBalance] = useState(0);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const initialized = useRef(false);
     const isConnected = useRef(false);
     const isDisconnected = useRef(false);
+    //const [hasProviderInitialized, setHasProviderInitialized] = useState(false);
 
-    const [message, setMessage] = useState('some message');
-    const [signature, setSignature] = useState('');
-    const [expectedAddress, setExpectedAddress] = useState('');
-    const [verificationResult, setVerificationResult] = useState('');
-    const location = useLocation();
-    const [loading, setLoading] = useState(false);
+    const OpenWallet = async () => {
 
-    const isMetaMaskInstalled = () => 
-    {
-        return Boolean(window.ethereum && window.ethereum.isMetaMask);
-    };
-
-    const onClickConnect = async () => 
-    {
-        if (!account){
+        if (!account) {
             connectModal.openConnectModal();
             return;
         }
-        try 
-        {
+
+        try {
             const accounts = await getAccounts();
             setWalletAddress(accounts[0]);
             const balance = await getBalance(accounts[0]);
             setAddressBalance(balance);
             setIsDialogOpen(true);
-        } 
-        catch (error) 
-        {
-            console.error('Error fetching address balance from MetaMask:', error);
+
+        } catch (error) {
+            console.error('Error getting wallet data:', error);
         }
     };
 
-    /*const closeModal = () => 
-    {
-        setIsModalOpen(false);
-    };*/
+    const handleLogin = async () => {
 
+        try {
+            connectModal.openConnectModal();
+        } catch (error) {
+            if (error.code === 4011) {
+                console.log("User canceled the operation");
+            } 
+            else {
+                console.error("Login error:", error);
+            }
+        }
+    };
+
+    const handleLogout = async () => {
+
+        //clearUser();
+        await disconnect();
+        setIsUserAuthenticated(false);
+        //window.location.reload();
+    };
+    
     const activateMenu = useCallback(() => {
         var menuItems = document.getElementsByClassName("sub-menu-item");
         if (menuItems) {
-    
+
             var matchingMenuItem = null;
             for (var idx = 0; idx < menuItems.length; idx++) {
                 if (menuItems[idx].href === window.location.href) {
@@ -125,194 +119,104 @@ export default function Navbar()
                 }
             }
         }
-    }, []);   
+    }, []);  
     
-    useEffect(() => 
-    {
-        activateMenu();
-        //console.log('the account', account);
-        /*if (account && !initialized.current) {
-            initialized.current = true;
-            console.log("connectKit", connectKit);
-            console.log("connectKit particle:",connectKit.particle);
-            //const user = getUserInfo();
-            //console.log("userinfo:", user);
-            console.log("account:", account);
-            console.log("connectID:", connectID);
-            //console.log("accountInfo:", userInfo);
-            //fetchBalance(account); 
+    /*useEffect(() => {
 
-            //authenticate();
-            //const result = checkUserData();
+        if (provider !== undefined && userInfo && !hasProviderInitialized) {
+            console.log("Setting provider", provider);
+            updateProvider(provider);
+            setHasProviderInitialized(true);
+        }
 
-        }*/
-        //console.log("NAVABR", userData, userInfo);
-       /* if (userInfo && !initialized.current) 
-        {
-            //console.log("CHEKING NAVBAR", userData, userInfo);
-            initialized.current = true;
-            const result = checkUserData(userInfo);
-            if (!result)
-            {
-                alert("Some error occured trying to login, please contact support!");
-                disconnect();
+    }, [provider, hasProviderInitialized]);*/
+
+    useEffect(() => {
+
+        const particleAuthHandler = async () => {
+
+            if (userInfo && account && provider && !initialized.current) {
+                initialized.current = true;
+                console.log("connected particle", account, userInfo);
+                const isVerifid = await verifyParticleAuth(account, userInfo);
+                if (!isVerifid) {
+                    console.log("NIOT VERIFIEDDDD");
+                    await disconnect();
+                    return;
+                }
+                updateProvider(provider);
+                setUserAvatar(getUserAvatar(userData));
+                setIsUserAuthenticated(true);
             }
-            if (userData)
-            {
-                setUserID(userData.sid);
-                if (userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
-                {
-                    setImageSrc(userData.avatar); 
-                    
-                }
-                else if (userData.avatar)
-                {
-                    setImageSrc(`/avatar/${userData.avatar}`); 
-                }
-                else
-                {
-                    setImageSrc(`/avatar/1.jpg`); 
-                }
-            }
-        }*/
+        };
+        particleAuthHandler();
 
-        connectKit.on('connect', async (provider) => 
-        {
-            if (!isConnected.current)
-            {
+    }, [userInfo, userData, account, provider, disconnect, updateProvider, setUserAvatar, getUserAvatar, verifyParticleAuth, setIsUserAuthenticated]);
+
+    useEffect(() => {
+
+        if (!connectKITC.current) {
+            connectKITC.current = connectKit;
+        }
+
+        const walletConnectHandler = async (provider) => {
+
+            if (!isConnected.current) {
                 isConnected.current = true;
                 isDisconnected.current = false;
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                const userDataString = localStorage.getItem('userData');
-                const wallet = localStorage.getItem('particle_connect_cached_provider');
-                let userDataFromStorage = { address: null, wallet: null };
-                if (userDataString !== null)
-                {
-                    userDataFromStorage = JSON.parse(userDataString);
+                console.log("connected wallet");
+                const isVerifid = await verifyWalletSignature();
+                if (!isVerifid){
+                    await disconnect();
+                    return;
                 }
-                if (userDataString === null || accounts[0] != userDataFromStorage.address || userDataFromStorage.wallet != wallet) 
-                {
-                    try {
-                        const messageToSign = `Authentication message: ${message}`;
-                        const signedMessage = await window.ethereum.request({
-                        method: 'personal_sign',
-                        params: [messageToSign, accounts[0]]
-                        });
-                        const params = {
-                            signature: signedMessage,
-                            message: messageToSign,
-                            address: accounts[0],
-                            wallet: localStorage.getItem('particle_connect_cached_provider')
-                        };
-                        const formData = qs.stringify(params);
-                        try {
-                            const response = await axios.post(process.env.REACT_APP_API_ADDRESS + '/verify-signature', formData, {
-                                headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                                }
-                            });
-                            //console.log('Response:', response, response.data.result.success, response.data);
-                            if (response.status === 200 && response.data.result.success) {
-                                updateUser(response.data.result.data);
-                            }
-                        } catch (error) {
-                            console.error('Error:', error);
-                            disconnect();
-                            //window.location.reload();
-                            return;
-                        }
-                    } catch (error) {
-                        console.error('Error signing message:', error);
-                        disconnect();
-                        //window.location.reload();
-                        return; 
+                updateProvider(window.ethereum);
+                setUserAvatar(getUserAvatar(userData));
+                setIsUserAuthenticated(true);
+                const hideWalletContainer = () => {
+                    const walletContainer = document.querySelector('.particle-wallet-entry-container');
+                    if (walletContainer) {
+                      walletContainer.style.display = 'none';
+                      observer.disconnect();
                     }
-                }
-                await connectWallet();
-                if (userData && userData.avatar && (userData.avatar.includes('http://') || userData.avatar.includes('https://'))) 
-                {
-                    setImageSrc(userData.avatar); 
-                }
-                else if (userData && userData.avatar)
-                {
-                    setImageSrc(`/avatar/${userData.avatar}`); 
-                }
-                else
-                {
-                    setImageSrc(`/avatar/1.jpg`); 
-                }
-                if (userData)
-                {
-                    setWalletAddress(userData.address);
-                    const balance = await getBalance(userData.address);
-                    setAddressBalance(balance);
-                    //setIsDialogOpen(true);
-                }
-                if (urls.become_creator === location.pathname && userData) {
-                    window.location.href = urls.upload_work;
-                }
-                /*if (urls.upload_work === location.pathname && !userData) {
-                    window.location.href = urls.become_creator;
-                }*/
+                 };
+                const observer = new MutationObserver(hideWalletContainer);
+                observer.observe(document.body, { childList: true, subtree: true });
+                hideWalletContainer(); 
             }
-        });
-        connectKit.on('disconnect', async () => 
-        {
+        };
+
+        const walletDisconnectHandler = async (provider) => {
+
             if (!isDisconnected.current)
-                {
-    
-                    isDisconnected.current = true;
-                    isConnected.current = false;
-                    console.log('disconnected');
-                    //window.location.reload();
-                }
-            try{
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                //console.log("WE STILL HAVE SIGNATURE MESSAGE", accounts);
-            } catch (error) {
-                //console.error('Now we have to verify signature msg again', error);
-                clearUser();
-                //setLoading(false);
-            }
-        });
-
-    }, [activateMenu]);
-
-    const handleLogin = async () => 
-    {
-        try 
-        {
-            //if (!userInfo) 
-            //{
-                //await connect({});
-                //const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                //console.log(accounts);
-                connectModal.openConnectModal();
-                //console.log(account);
-           // }
-        } 
-        catch (error) 
-        {
-            if (error.code === 4011) 
             {
-                console.log("User canceled the operation");
-            } 
-            else 
-            {
-                console.error("Error:", error);
+                isDisconnected.current = true;
+                isConnected.current = false;
+                console.log('disconnected wallet');
+                //window.location.reload();
             }
-        }
-    };
+        };
 
-    const handleLogout = async () => 
-    {
-        //clearUser();
-        await disconnect();
-        //window.location.reload();
-    };
+        connectKITC.current.on('connect', walletConnectHandler);
+        connectKITC.current.on('disconnect', walletDisconnectHandler);
+
+        return () => {
+            connectKITC.current.off('connect', walletConnectHandler);
+            connectKITC.current.off('disconnect', walletDisconnectHandler);
+        };
+
+    }, [userData, connectKit, disconnect, updateProvider, setUserAvatar, getUserAvatar, setIsUserAuthenticated, verifyWalletSignature]);
+
+    useEffect(() => {
+
+        activateMenu();
+
+    }, [activateMenu]); 
 
     window.addEventListener("scroll", windowScroll);
+    
     function windowScroll() {
+
         const navbar = document.getElementById("topnav");
         if (
             document.body.scrollTop >= 50 ||
@@ -326,7 +230,6 @@ export default function Navbar()
                 navbar?.classList.remove("nav-sticky");
             }
         }
-
         const mybutton = document.getElementById("back-to-top");
         if (mybutton != null) {
             if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
@@ -358,7 +261,6 @@ export default function Navbar()
     }
 
     const getClosest = (elem, selector) => {
-
         // Element.matches() polyfill
         if (!Element.prototype.matches) {
             Element.prototype.matches =
@@ -374,7 +276,6 @@ export default function Navbar()
                     return i > -1;
                 };
         }
-
         // Get the closest matching element
         for (; elem && elem !== document; elem = elem.parentNode) {
             if (elem.matches(selector)) return elem;
@@ -382,73 +283,6 @@ export default function Navbar()
         return null;
 
     };
-
-    /*const metamask = async () => {
-        try {
-            
-            //Basic Actions Section
-            const onboardButton = document.getElementById('connectWallet')
-
-            //   metamask modal
-            const modal = document.getElementById('modal-metamask')
-            const closeModalBtn = document.getElementById('close-modal')
-
-            //   wallet address
-            const myPublicAddress = document.getElementById('myPublicAddress')
-
-            //Created check function to see if the MetaMask extension is installed
-            const isMetaMaskInstalled = () => {
-                //Have to check the ethereum binding on the window object to see if it's installed
-                const { ethereum } = window
-                return Boolean(ethereum && ethereum.isMetaMask)
-            }
-
-            const onClickConnect = async () => {
-                if (!isMetaMaskInstalled()) {
-                    //meta mask not installed
-                    modal.classList.add('show')
-                    modal.style.display = 'block'
-                    return
-                }
-                try {
-                    // eslint-disable-next-line no-undef
-                    await ethereum.request({ method: 'eth_requestAccounts' })
-                    // eslint-disable-next-line no-undef
-                    const accounts = await ethereum.request({ method: 'eth_accounts' })
-                    myPublicAddress.innerHTML =
-                        accounts[0].split('').slice(0, 6).join('') +
-                        '...' +
-                        accounts[0]
-                            .split('')
-                            .slice(accounts[0].length - 7, accounts[0].length)
-                            .join('')
-                } catch (error) {
-                    console.error(error)
-                }
-            }
-
-            const closeModal = () => {
-                modal.classList.remove('show')
-                modal.style.display = 'none'
-            }
-
-            if (isMetaMaskInstalled()) {
-                // eslint-disable-next-line no-undef
-                const accounts = await ethereum.request({ method: 'eth_accounts' })
-                if (!!accounts[0]) {
-                    myPublicAddress.innerHTML =
-                        accounts[0].split('').slice(0, 6).join('') +
-                        '...' +
-                        accounts[0]
-                            .split('')
-                            .slice(accounts[0].length - 7, accounts[0].length)
-                            .join('')
-                }
-            }
-            onboardButton.addEventListener('click', onClickConnect)
-            closeModalBtn.addEventListener('click', closeModal)
-        } catch (error) { }
-    }*/
 
     return (
         <>
@@ -479,7 +313,7 @@ export default function Navbar()
                         </div>
                     </div>
 
-                    <div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
+                    {/*<div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
                         <div className="flex items-center justify-center min-h-screen">
                             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                             <div className="relative bg-white rounded-lg max-w-lg w-full p-4">
@@ -492,7 +326,8 @@ export default function Navbar()
                                 </div>
                             </div>
                         </div>
-                    </div>
+    </div>*/}
+
 
                     {/* <!--Login button Start--> */}
                     <ConnectButton.Custom>
@@ -513,7 +348,7 @@ export default function Navbar()
 
                                         <li className="inline-block ps-1 mb-0">
                                             <button
-                                                onClick={onClickConnect}
+                                                onClick={OpenWallet}
                                                 className="btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white">
                                                 <PiWalletBold />
                                             </button>
@@ -521,14 +356,14 @@ export default function Navbar()
 
                                         <li className="dropdown inline-block relative ps-1">
                                             <button onClick={() => openDropdown(!isDropdown)} data-dropdown-toggle="dropdown" className="dropdown-toggle btn btn-icon rounded-full bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white inline-flex" type="button">
-                                                <img src={imageSrc} className="rounded-full" alt="" />
+                                                <img src={userAvatar} className="rounded-full" alt="" />
                                             </button>
                                             <div className={`dropdown-menu absolute end-0 m-0 mt-4 z-10 min-w-200 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 ${isDropdown ? 'hidden' : 'block'}`} style={{ minWidth: '200px' }}>
                                                 <div className="relative">
                                                     <div className="py-8 bg-gradient-to-tr from-violet-600 to-red-600"></div>
                                                     <div className="absolute px-4 -bottom-7 start-0">
                                                         <div className="flex items-end">
-                                                            <img src={imageSrc} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
+                                                            <img src={userAvatar} className="rounded-full w-10 h-w-10 shadow dark:shadow-gray-700" alt="" />
                                                             {userData && (
                                                                 <span className="font-semibold text-[15px] ms-1">{userData.art_name}</span>
                                                             )}
@@ -547,14 +382,11 @@ export default function Navbar()
                                                         <Link to={`${urls.user_nfts}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/>My NFT</Link>
                                                     </li>
                                                     <li>
-                                                        <Link to={`${urls.creator_profile}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/>Profile</Link>
+                                                        <Link to={`${urls.creator_profile}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/>My Profile</Link>
                                                     </li>
-                                                    {/*<li>
-                                                        <Link to={`${urls.creator_profile_id}/${account}`} className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><AiOutlineUser className="text-[16px] align-middle me-1"/> Profile</Link>
-                                                        </li>*/}
-                                                    {/*<li>
+                                                    <li>
                                                         <Link to="/creator-profile-edit" className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600"><LuSettings className="text-[16px] align-middle me-1"/> Settings</Link>
-                                                    </li>*/}
+                                                    </li>
                                                     <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
                                                     <li>
                                                         <Link className="inline-flex items-center text-[14px] font-semibold py-1.5 px-4 hover:text-violet-600" onClick={handleLogout}>
@@ -641,7 +473,7 @@ export default function Navbar()
                     </ul>
                 </div>
             </div>
-            <div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
+            {/*<div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                     <div className="relative bg-white rounded-lg max-w-lg w-full p-4">
@@ -651,6 +483,20 @@ export default function Navbar()
                             <p className="text-lg font-medium text-black">Balance:</p>
                             <p className="text-lg font-medium text-black">{addressBalance} ETH</p>
                             <button className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-violet-600 hover:text-white" onClick={() => setIsDialogOpen(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>*/}
+            <div className={`fixed inset-0 z-10 overflow-y-auto ${isDialogOpen ? 'block' : 'hidden'}`}>
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                    <div className="relative bg-slate-900 rounded-lg max-w-lg w-full p-4 ">
+                        <div className="text-center" style={{ padding: '20px' }}>
+                            <p className="text-lg font-medium text-white">Address:</p>
+                            <p className="text-lg font-medium text-white">{walletAddress}</p>
+                            <p className="text-lg font-medium text-white">Balance:</p>
+                            <p className="text-lg font-medium text-white">{addressBalance} ETH</p>
+                            <button className="mt-4 px-4 py-2 bg-violet-600 text-white rounded-lg shadow-lg hover:bg-violet-600 hover:text-white" onClick={() => setIsDialogOpen(false)}>Close</button>
                         </div>
                     </div>
                 </div>
