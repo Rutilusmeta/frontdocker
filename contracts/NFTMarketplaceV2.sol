@@ -56,15 +56,17 @@ contract NFTMarketplaceV2 is OwnableUpgradeable, ReentrancyGuardUpgradeable, ERC
         return ownerOf(tokenId);
     }
 
-    function createToken(string memory _tokenURI, uint256 _price) public payable
+    function createToken(string memory _tokenURI, uint256 _price, address contractAddress) public payable
     {
         _tokenIds++;
         uint256 newTokenId = _tokenIds;
-        _safeMint(msg.sender, newTokenId);
-        _setTokenURI(newTokenId, _tokenURI);
+        //_safeMint(msg.sender, newTokenId);
+        //_setTokenURI(newTokenId, _tokenURI);
+        IERC721Upgradeable(contractAddress).transferFrom(msg.sender, address(this), tokenId);
         createMarketItem(newTokenId, _price, _tokenURI);
     }
 
+    //function createMarketItem(uint256 tokenId, uint256 price, string memory tokenURI) private 
     function createMarketItem(uint256 tokenId, uint256 price, string memory tokenURI) private 
     {
         idToMarketItem[tokenId] = MarketItem
@@ -77,7 +79,8 @@ contract NFTMarketplaceV2 is OwnableUpgradeable, ReentrancyGuardUpgradeable, ERC
             State.Inactive,
             false
         );
-        _transfer(msg.sender, address(this), tokenId);
+        //_transfer(msg.sender, address(this), tokenId);
+        //IERC721Upgradeable(contractAddress).transferFrom(msg.sender, address(this), tokenId);
     }
 
     function getMarketItemsBySeller(address seller) public view returns (MarketItem[] memory)
